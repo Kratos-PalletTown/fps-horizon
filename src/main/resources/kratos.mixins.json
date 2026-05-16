@@ -1,0 +1,19 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "pueblopaleta.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "KratosMixin",
+    "KratosPacketMixin",
+    "KratosEmbeddiumMixin",
+    "KratosSodiumAccessor",
+    "KratosF3AMixin",
+    "KratosChunkCullingMixin",
+    "KratosEntityCullingMixin",
+    "KratosOcclusionCullerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}
