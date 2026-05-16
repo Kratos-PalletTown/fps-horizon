@@ -29,7 +29,7 @@
 
 | Dependency | Version |
 |---|---|
-| Minecraft | 1.20.1 |
+| Minecraft | Java |
 | Forge | 47.4.10+ |
 | Embeddium | 0.3.31+ |
 
@@ -60,7 +60,7 @@ All options are available in-game via **Mods → FPS Horizon → Config**.
 | Option | Default | Description |
 |---|---|---|
 | Enable Fog | true | Enables the distance fog that hides chunk loading |
-| Fog Start | 0 blocks | Distance where fog begins (0 = Silent Hill style) |
+| Fog Start | 0 blocks | Distance where fog begins |
 | Fog End | 0.80 | Fraction of render distance where fog becomes fully opaque |
 | Fog Close Factor | 0.80 | How aggressively the fog closes during a render distance change |
 | Fog Speed | 0.05 | Animation speed of fog transitions (0.01 = slow, 0.5 = fast) |
@@ -96,7 +96,7 @@ All options are available in-game via **Mods → FPS Horizon → Config**.
 
 | Dependencia | Versión |
 |---|---|
-| Minecraft | 1.20.1 |
+| Minecraft |
 | Forge | 47.4.10+ |
 | Embeddium | 0.3.31+ |
 
@@ -127,7 +127,7 @@ Todas las opciones están disponibles en el juego en **Mods → FPS Horizon → 
 | Opción | Por defecto | Descripción |
 |---|---|---|
 | Activar Niebla | true | Activa la niebla que oculta la carga de chunks |
-| Inicio de Niebla | 0 bloques | Distancia donde empieza la niebla (0 = estilo Silent Hill) |
+| Inicio de Niebla | 0 bloques | Distancia donde empieza la niebla |
 | Fin de Niebla | 0.80 | Fracción de la distancia donde la niebla se vuelve opaca |
 | Factor de Cierre | 0.80 | Qué tan agresivo es el cierre de niebla durante un cambio |
 | Velocidad de Niebla | 0.05 | Velocidad de animación (0.01 = lento, 0.5 = rápido) |
