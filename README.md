@@ -21,11 +21,11 @@
 - **Dynamic render distance** — automatically increases or decreases render distance based on your average FPS
 - **Animated fog transitions** — smooth distance fog hides chunk loading during render distance changes
 - **Distance culling** — reduces GPU load by culling chunks and entities outside an ellipsoid shape
-- **Culling profiles** — create custom culling configurations per render distance (exact value or range)
-- **Dynamic culling** *(experimental)* — automatically adjusts culling aggressiveness based on current render distance
-- **Real-time configuration** — all settings can be changed in-game from the Mods menu without restarting
+- **Culling profiles** — create custom culling configurations per render distance (exact value or range), saved to `fps_horizon_profiles.json`
+- **Dynamic culling** *(experimental)* — automatically adjusts culling based on current render distance
+- **Real-time configuration** — all settings changeable in-game from the Mods menu, no restart needed
 - **Embeddium compatible** — fully integrated with Embeddium's rendering pipeline via Mixins
-- **Lightweight** — runs entirely on client side, no server needed
+- **Client-side only** — works on any server
 
 ### 📋 Requirements
 
@@ -36,7 +36,7 @@
 
 ### ⚙️ Configuration
 
-All options are available in-game via **Mods → FPS Horizon → Config**.
+All options available in-game via **Mods → FPS Horizon → Config**.
 
 #### FPS Control
 | Option | Default | Description |
@@ -48,8 +48,8 @@ All options are available in-game via **Mods → FPS Horizon → Config**.
 #### Render Distance
 | Option | Default | Description |
 |---|---|---|
-| Min Render Distance | 4 chunks | The mod will never go below this value |
-| Max Render Distance | 12 chunks | The mod will never exceed this value |
+| Min Render Distance | 4 | The mod will never go below this value (chunks) |
+| Max Render Distance | 12 | The mod will never exceed this value (chunks) |
 
 #### Cooldown
 | Option | Default | Description |
@@ -64,20 +64,24 @@ All options are available in-game via **Mods → FPS Horizon → Config**.
 | Fog Start | 0 blocks | Distance where fog begins |
 | Fog End | 0.80 | Fraction of render distance where fog becomes fully opaque |
 | Fog Close Factor | 0.80 | How aggressively the fog closes during a render distance change |
-| Fog Speed | 0.05 | Animation speed of fog transitions |
+| Fog Speed | 0.05 | Animation speed of fog transitions (0.01 = slow, 0.5 = fast) |
 
 #### Culling
 | Option | Default | Description |
 |---|---|---|
 | Enable Culling | true | Enables distance-based chunk and entity culling |
-| Vertical Scale | 2.0x | How aggressively chunks above/below are culled |
-| Horizontal Extension | 10% | Extends the render ellipsoid horizontally |
-| Cull Entities | true | Applies culling to entities as well |
+| Vertical Scale | 2.00x | How aggressively chunks above/below are culled (0.50x–10.0x) |
+| Horizontal Extension | 10% | Extends the render ellipsoid horizontally (0–100%) |
+| Cull Entities | true | Applies culling to entities (mobs, items, etc) as well |
 | Dynamic Culling *(experimental)* | false | Auto-adjusts culling based on current render distance |
 | Profiles *(experimental)* | false | Use custom culling profiles per render distance |
 
-#### Culling Profiles
-Create profiles that define vertical and horizontal culling values for a specific render distance (exact value or range). When active, the main culling sliders are disabled and the matching profile is used automatically. Profiles are saved in `fps_horizon_profiles.json`.
+**Dynamic Culling** adjusts automatically:
+- RD 1–2: Vertical 0.50x, Horizontal 30%
+- RD 3: Vertical 0.50x, Horizontal 40%
+- RD 4+: Uses your configured slider values
+
+**Culling Profiles** let you create named profiles with specific vertical/horizontal culling values for a given render distance (exact value or range). When active, the Vertical and Horizontal sliders are disabled and the matching profile is applied automatically. Profiles are saved in `fps_horizon_profiles.json` in your config folder.
 
 #### Debug
 | Option | Default | Description |
@@ -90,16 +94,16 @@ Create profiles that define vertical and horizontal culling values for a specifi
 1. Install [Minecraft Forge](https://files.minecraftforge.net/) for your version
 2. Install [Embeddium 0.3.31+](https://modrinth.com/mod/embeddium)
 3. Drop `fps-horizon-X.X.X.jar` into your `mods/` folder
-4. Launch the game and configure via **Mods → FPS Horizon → Config**
+4. Launch and configure via **Mods → FPS Horizon → Config**
 
 ### 📋 Changelog
 
 **v1.1.0**
-- Added distance culling system (chunk and entity culling via ellipsoid)
-- Added culling profiles — custom vertical/horizontal values per render distance
-- Added dynamic culling (experimental) — auto-adjusts culling for low render distances
-- Fog transitions now also trigger on significant culling changes
-- Fixed fog initialization causing visual artifacts on world load
+- Added distance culling system (chunks and entities via ellipsoid)
+- Added culling profiles — custom vertical/horizontal values per render distance (exact or range)
+- Added dynamic culling *(experimental)* — auto-adjusts culling for low render distances
+- Fog transitions now also trigger on significant culling vertical scale changes
+- Fixed fog initialization artifacts on world load
 
 **v1.0.0**
 - Initial release
@@ -116,14 +120,14 @@ Create profiles that define vertical and horizontal culling values for a specifi
 
 ### ✨ Características
 
-- **Distancia dinámica** — aumenta o reduce el render distance automáticamente según tus FPS promedio
+- **Distancia dinámica** — aumenta o reduce el render distance según tus FPS promedio
 - **Transiciones de niebla animadas** — niebla suave oculta la carga de chunks durante los cambios
 - **Culling de distancia** — reduce la carga de GPU descartando chunks y entidades fuera de un elipsoide
-- **Perfiles de culling** — creá configuraciones de culling personalizadas por distancia de renderizado (valor exacto o rango)
+- **Perfiles de culling** — configuraciones personalizadas de culling por distancia de renderizado, guardadas en `fps_horizon_profiles.json`
 - **Culling dinámico** *(experimental)* — ajusta automáticamente el culling según la distancia actual
-- **Configuración en tiempo real** — todos los ajustes se pueden cambiar en el juego desde el menú de Mods sin reiniciar
-- **Compatible con Embeddium** — integrado completamente con el pipeline de renderizado de Embeddium vía Mixins
-- **Liviano** — funciona solo del lado del cliente, no requiere servidor
+- **Configuración en tiempo real** — todo cambiable en el juego desde el menú de Mods, sin reiniciar
+- **Compatible con Embeddium** — integrado con el pipeline de renderizado de Embeddium vía Mixins
+- **Solo cliente** — funciona en cualquier servidor
 
 ### 📋 Requisitos
 
@@ -134,20 +138,20 @@ Create profiles that define vertical and horizontal culling values for a specifi
 
 ### ⚙️ Configuración
 
-Todas las opciones están disponibles en el juego en **Mods → FPS Horizon → Config**.
+Todas las opciones disponibles en **Mods → FPS Horizon → Config**.
 
 #### Control de FPS
 | Opción | Por defecto | Descripción |
 |---|---|---|
-| FPS Mínimos | 30 | Si el promedio de FPS baja de este valor, se reduce la distancia |
-| FPS Máximos | 50 | Si el promedio de FPS supera este valor, se aumenta la distancia |
+| FPS Mínimos | 30 | Si el promedio baja de este valor, se reduce la distancia |
+| FPS Máximos | 50 | Si el promedio supera este valor, se aumenta la distancia |
 | Muestras de FPS | 15 | Cantidad de muestras a promediar antes de decidir un cambio |
 
 #### Distancia de Renderizado
 | Opción | Por defecto | Descripción |
 |---|---|---|
-| Distancia Mínima | 4 chunks | El mod nunca bajará de este valor |
-| Distancia Máxima | 12 chunks | El mod nunca superará este valor |
+| Distancia Mínima | 4 | El mod nunca bajará de este valor (chunks) |
+| Distancia Máxima | 12 | El mod nunca superará este valor (chunks) |
 
 #### Cooldown
 | Opción | Por defecto | Descripción |
@@ -162,20 +166,24 @@ Todas las opciones están disponibles en el juego en **Mods → FPS Horizon → 
 | Inicio de Niebla | 0 bloques | Distancia donde empieza la niebla |
 | Fin de Niebla | 0.80 | Fracción de la distancia donde la niebla se vuelve opaca |
 | Factor de Cierre | 0.80 | Qué tan agresivo es el cierre de niebla durante un cambio |
-| Velocidad de Niebla | 0.05 | Velocidad de animación |
+| Velocidad de Niebla | 0.05 | Velocidad de animación (0.01 = lento, 0.5 = rápido) |
 
 #### Culling
 | Opción | Por defecto | Descripción |
 |---|---|---|
 | Activar Culling | true | Activa el culling de chunks y entidades por distancia |
-| Escala Vertical | 2.0x | Qué tan agresivamente se descartan chunks arriba/abajo |
-| Extensión Horizontal | 10% | Extiende el elipsoide horizontalmente |
-| Culling de Entidades | true | Aplica el culling también a entidades |
+| Escala Vertical | 2.00x | Qué tan agresivamente se descartan chunks arriba/abajo (0.50x–10.0x) |
+| Extensión Horizontal | 10% | Extiende el elipsoide horizontalmente (0–100%) |
+| Culling de Entidades | true | Aplica el culling también a entidades (mobs, items, etc) |
 | Culling Dinámico *(experimental)* | false | Ajusta automáticamente el culling según la distancia actual |
 | Perfiles *(experimental)* | false | Usá perfiles de culling personalizados por distancia de renderizado |
 
-#### Perfiles de Culling
-Creá perfiles que definen los valores de culling vertical y horizontal para una distancia de renderizado específica (valor exacto o rango). Cuando está activo, los sliders principales se deshabilitan y se usa el perfil que corresponda automáticamente. Los perfiles se guardan en `fps_horizon_profiles.json`.
+**Culling Dinámico** ajusta automáticamente:
+- RD 1–2: Vertical 0.50x, Horizontal 30%
+- RD 3: Vertical 0.50x, Horizontal 40%
+- RD 4+: Usa tus valores configurados
+
+**Perfiles de Culling** — creá perfiles con nombre y valores específicos de culling vertical y horizontal para una distancia de renderizado dada (valor exacto o rango). Cuando está activo, los sliders de Vertical y Horizontal se deshabilitan y se aplica el perfil que corresponda automáticamente. Los perfiles se guardan en `fps_horizon_profiles.json` en tu carpeta de config.
 
 #### Debug
 | Opción | Por defecto | Descripción |
@@ -193,11 +201,11 @@ Creá perfiles que definen los valores de culling vertical y horizontal para una
 ### 📋 Changelog
 
 **v1.1.0**
-- Sistema de culling por distancia (chunks y entidades via elipsoide)
-- Perfiles de culling — valores personalizados de vertical/horizontal por distancia de renderizado
-- Culling dinámico (experimental) — ajusta automáticamente el culling para distancias bajas
-- Las transiciones de niebla ahora también se disparan ante cambios significativos de culling
-- Corregido bug de inicialización de niebla que causaba artefactos visuales al cargar el mundo
+- Sistema de culling por distancia (chunks y entidades vía elipsoide)
+- Perfiles de culling — valores personalizados por distancia de renderizado (exacto o rango)
+- Culling dinámico *(experimental)* — ajusta automáticamente para distancias bajas
+- Las transiciones de niebla ahora también se disparan ante cambios significativos de culling vertical
+- Corregido bug de inicialización de niebla al cargar el mundo
 
 **v1.0.0**
 - Lanzamiento inicial
