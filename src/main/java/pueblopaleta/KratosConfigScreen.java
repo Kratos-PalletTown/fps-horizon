@@ -168,15 +168,15 @@ public class KratosConfigScreen extends Screen
                 // Slider vertical (gris si perfiles activos)
                 final CullingVerticalSlider vSlider = new CullingVerticalSlider(0, 0, W, H,
                     Component.translatable("fps_horizon.config.cullingVertical"),
-                    KratosConfig.CULLING_VERTICAL,
+                    KratosConfig.CULLING_VERTICAL::get, KratosConfig.CULLING_VERTICAL::set,
                     Component.translatable("fps_horizon.config.cullingVertical.tooltip"));
                 vSlider.active = !perfilesActivos;
                 y = addSlider(startX, y, vSlider);
 
                 // Slider horizontal (gris si perfiles activos)
-                final IntSlider hSlider = new IntSlider(0, 0, W, H,
+                final PercentSlider hSlider = new PercentSlider(0, 0, W, H,
                     Component.translatable("fps_horizon.config.cullingHorizontal"),
-                    KratosConfig.CULLING_HORIZONTAL, 0, 100,
+                    KratosConfig.CULLING_HORIZONTAL::get, KratosConfig.CULLING_HORIZONTAL::set, 0, 100,
                     Component.translatable("fps_horizon.config.cullingHorizontal.tooltip"));
                 hSlider.active = !perfilesActivos;
                 y = addSlider(startX, y, hSlider);
@@ -356,16 +356,48 @@ public class KratosConfigScreen extends Screen
     }
 
 
-    // ── Culling Vertical Slider (muestra multiplicador real = val/4) ────────────
-    public static class CullingVerticalSlider extends AbstractSliderButton {
-        private final net.minecraftforge.common.ForgeConfigSpec.IntValue config;
+    // ── Percent Slider ──────────────────────────────────────────────────────────
+    public static class PercentSlider extends AbstractSliderButton {
+        private final java.util.function.Supplier<Integer> getter;
+        private final java.util.function.Consumer<Integer> setter;
+        private final int min, max;
         private final Component label;
 
-        CullingVerticalSlider(int x, int y, int w, int h, Component label,
-                              net.minecraftforge.common.ForgeConfigSpec.IntValue config,
-                              Component tooltip) {
-            super(x, y, w, h, Component.empty(), (double)(config.get() - 2) / (40 - 2));
-            this.config = config; this.label = label;
+        public PercentSlider(int x, int y, int w, int h, Component label,
+                             java.util.function.Supplier<Integer> getter,
+                             java.util.function.Consumer<Integer> setter,
+                             int min, int max, Component tooltip) {
+            super(x, y, w, h, Component.empty(), (double)(getter.get() - min) / (max - min));
+            this.getter = getter; this.setter = setter;
+            this.min = min; this.max = max; this.label = label;
+            this.setTooltip(Tooltip.create(tooltip));
+            this.updateMessage();
+        }
+
+        @Override
+        protected void updateMessage() {
+            this.setMessage(Component.literal(label.getString() + ": " + 
+                (min + (int) Math.round(this.value * (max - min))) + "%"));
+        }
+
+        @Override
+        protected void applyValue() {
+            setter.accept(min + (int) Math.round(this.value * (max - min)));
+        }
+    }
+
+    // ── Culling Vertical Slider (muestra porcentaje = val * 25) ────────────────
+    public static class CullingVerticalSlider extends AbstractSliderButton {
+        private final java.util.function.Supplier<Integer> getter;
+        private final java.util.function.Consumer<Integer> setter;
+        private final Component label;
+
+        public CullingVerticalSlider(int x, int y, int w, int h, Component label,
+                                     java.util.function.Supplier<Integer> getter,
+                                     java.util.function.Consumer<Integer> setter,
+                                     Component tooltip) {
+            super(x, y, w, h, Component.empty(), (double)(getter.get() - 2) / (40 - 2));
+            this.getter = getter; this.setter = setter; this.label = label;
             this.setTooltip(Tooltip.create(tooltip));
             this.updateMessage();
         }
@@ -376,14 +408,13 @@ public class KratosConfigScreen extends Screen
 
         @Override
         protected void updateMessage() {
-            double multiplier = rawValue() / 4.0;
-            this.setMessage(Component.literal(
-                String.format("%s: %.2fx", label.getString(), multiplier)));
+            int percent = rawValue() * 25;
+            this.setMessage(Component.literal(label.getString() + ": " + percent + "%"));
         }
 
         @Override
         protected void applyValue() {
-            config.set(rawValue());
+            setter.accept(rawValue());
         }
     }
 

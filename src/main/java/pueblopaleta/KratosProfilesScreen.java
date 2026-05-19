@@ -27,8 +27,8 @@ public class KratosProfilesScreen extends Screen
     private EditBox rdExactBox;
     private EditBox rdMinBox;
     private EditBox rdMaxBox;
-    private int addVertical   = 8;   // default 2.0x
-    private int addHorizontal = 10;  // default 10%
+    private int addVertical   = 4;   // default 1.0x
+    private int addHorizontal = 0;   // default 0%
     private String errorMsg = "";
     private KratosProfiles.Profile editingProfile = null; // null = nuevo
 
@@ -61,7 +61,13 @@ public class KratosProfilesScreen extends Screen
         // Botones de accion abajo
         this.addRenderableWidget(Button.builder(
             Component.translatable("fps_horizon.profiles.add"),
-            b -> { mode = Mode.ADD_TYPE; editingProfile = null; this.init(); }
+            b -> { 
+                mode = Mode.ADD_TYPE; 
+                editingProfile = null; 
+                addVertical = 4;
+                addHorizontal = 0;
+                this.init(); 
+            }
         ).bounds(cx - BW - 4, bottom, BW, H).build());
 
         final Button deleteBtn = Button.builder(
@@ -166,19 +172,21 @@ public class KratosProfilesScreen extends Screen
 
         // Slider vertical
         final int initV = editingProfile != null ? editingProfile.vertical : addVertical;
+        addVertical = initV;
         this.addRenderableWidget(new KratosConfigScreen.CullingVerticalSlider(
             cx - W / 2, y, W, H,
             Component.translatable("fps_horizon.config.cullingVertical"),
-            new FakeIntValue(initV, v -> addVertical = v),
+            () -> addVertical, v -> addVertical = v,
             Component.translatable("fps_horizon.config.cullingVertical.tooltip")));
         y += H + 6;
 
         // Slider horizontal
         final int initH = editingProfile != null ? editingProfile.horizontal : addHorizontal;
-        this.addRenderableWidget(new KratosConfigScreen.IntSlider(
+        addHorizontal = initH;
+        this.addRenderableWidget(new KratosConfigScreen.PercentSlider(
             cx - W / 2, y, W, H,
             Component.translatable("fps_horizon.config.cullingHorizontal"),
-            new FakeIntValue(initH, v -> addHorizontal = v), 0, 100,
+            () -> addHorizontal, v -> addHorizontal = v, 0, 100,
             Component.translatable("fps_horizon.config.cullingHorizontal.tooltip")));
         y += H + 10;
 
@@ -329,21 +337,6 @@ public class KratosProfilesScreen extends Screen
     @Override
     public void onClose() {
         this.minecraft.setScreen(parent);
-    }
-
-    // ── FakeIntValue para sliders sin ForgeConfigSpec ────────────────────────────
-    public static class FakeIntValue extends net.minecraftforge.common.ForgeConfigSpec.IntValue {
-        private int val;
-        private final java.util.function.IntConsumer onChange;
-
-        public FakeIntValue(int initial, java.util.function.IntConsumer onChange) {
-            super(null, null, null);
-            this.val = initial;
-            this.onChange = onChange;
-        }
-
-        @Override public Integer get() { return val; }
-        @Override public void set(Integer v) { this.val = v; onChange.accept(v); }
     }
 
     // ── Confirm Delete Screen ────────────────────────────────────────────────────

@@ -71,10 +71,10 @@ public class KratosConfig
         BUILDER.push("5_culling");
         BUILDER.comment("Activa o desactiva el culling dinamico de chunks");
         CULLING_ACTIVO = BUILDER.define("cullingActivo", true);
-        BUILDER.comment("Escala vertical del culling. 8 = default (2.0x), 2 = minimo (0.5x), 40 = maximo (10x). Slider interno divide por 4.");
-        CULLING_VERTICAL = BUILDER.defineInRange("cullingVertical", 8, 2, 40);
-        BUILDER.comment("Escala horizontal del culling. 0 = normal (1.0x), 100 = maximo (2.0x). Default: 10");
-        CULLING_HORIZONTAL = BUILDER.defineInRange("cullingHorizontal", 10, 0, 100);
+        BUILDER.comment("Escala vertical del culling. 4 = default (100%), 2 = minimo (50%), 40 = maximo (1000%).");
+        CULLING_VERTICAL = BUILDER.defineInRange("cullingVertical", 4, 2, 40);
+        BUILDER.comment("Escala horizontal del culling. 0 = normal (0%), 100 = maximo (100%). Default: 0");
+        CULLING_HORIZONTAL = BUILDER.defineInRange("cullingHorizontal", 0, 0, 100);
         BUILDER.comment("Aplica el culling tambien a entidades (mobs, items, etc)");
         CULLING_ENTIDADES = BUILDER.define("cullingEntidades", true);
         BUILDER.comment("[EXPERIMENTAL] Ajusta automaticamente el culling segun el RD actual.\n  RD <= 2: vertical 50%, horizontal 30%\n  RD == 3: vertical 50%, horizontal 40%\n  RD >= 4: usa los valores configurados");

@@ -10,8 +10,6 @@ public class KratosCulling
 {
     public static volatile float xStretch  = 1.0f;
     public static volatile float yStretch  = 1.0f;
-    public static volatile float cosAngle  = 1.0f;
-    public static volatile float sinAngle  = 0.0f;
     public static volatile int   maxSqDist = Integer.MAX_VALUE;
 
     private float xStretchCurrent = 1.0f;
@@ -61,11 +59,6 @@ public class KratosCulling
         if (currentRD != lastRD) {
             lastRD = currentRD;
         }
-
-        // Angulo de la camara
-        final float yawRad = -(float)(mc.player.getYRot() * Math.PI / 180.0);
-        cosAngle = (float) Math.cos(yawRad);
-        sinAngle = (float) Math.sin(yawRad);
 
         // Calcular targets
         int vSlider = KratosConfig.CULLING_VERTICAL.get();
@@ -156,8 +149,6 @@ public class KratosCulling
         xStretch  = 1.0f;
         yStretch  = 1.0f;
         maxSqDist = Integer.MAX_VALUE;
-        cosAngle  = 1.0f;
-        sinAngle  = 0.0f;
         lastRD    = -1;
         yStretchApplied = 1.0f;
         estadoCulling = EstadoCulling.NORMAL;
@@ -169,12 +160,11 @@ public class KratosCulling
 
     public static double adjustedDistance(final int x1, final int y1, final int z1,
                                           final double x2, final double y2, final double z2) {
-        final double x2New = (x2 - x1) * cosAngle - (z2 - z1) * sinAngle + x1;
-        final double z2New = (x2 - x1) * sinAngle + (z2 - z1) * cosAngle + z1;
-        final double d0 = x1 - x2New;
-        final double d2 = y1 - y2;
-        final double d3 = z1 - z2New;
-        return xStretch * d0 * d0 + yStretch * (d2 * d2) + d3 * d3;
+        final double dx = x1 - x2;
+        final double dy = y1 - y2;
+        final double dz = z1 - z2;
+
+        return xStretch * (dx * dx + dz * dz) + yStretch * (dy * dy);
     }
 
     public static double adjustedDistance(final BlockPos chunk, final BlockPos player) {
