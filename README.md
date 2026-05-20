@@ -14,13 +14,18 @@
 
 ## 🇬🇧 English
 
-**FPS Horizon** is a client-side Forge mod that dynamically adjusts render distance based on your average FPS, keeping the game smooth without any manual tweaking.
+**FPS Horizon** is a client-side Forge mod that dynamically adjusts render distance and simulation distance based on your average FPS, keeping the game smooth without any manual tweaking.
 
 ### ✨ Features
 
 - **Dynamic render distance** — automatically increases or decreases render distance based on your average FPS
+- **Dynamic simulation distance** *(new)* — auto-adjusts simulation distance to improve CPU performance alongside GPU optimization
 - **Animated fog transitions** — smooth distance fog hides chunk loading during render distance changes
 - **Distance culling** — reduces GPU load by culling chunks and entities outside an ellipsoid shape
+- **Entity whitelist** — Bosses, item frames, and paintings are never culled for better visual continuity
+- **Memory Guard** — prevents render distance increases if RAM usage exceeds 85%, avoiding garbage collection stutters
+- **1% Low filtering** — ignores micro-stutters when calculating FPS average, ensuring stable render distance decisions
+- **Micro-HUD display** *(new)* — optional compact visual indicator in debug view showing mod state and active adjustments
 - **Culling profiles** — create custom culling configurations per render distance (exact value or range), saved to `fps_horizon_profiles.json`
 - **Dynamic culling** *(experimental)* — automatically adjusts culling based on current render distance
 - **Real-time configuration** — all settings changeable in-game from the Mods menu, no restart needed
@@ -38,18 +43,22 @@
 
 All options available in-game via **Mods → FPS Horizon → Config**.
 
-#### FPS Control
-| Option | Default | Description |
-|---|---|---|
-| Min FPS | 30 | If average FPS drops below this, render distance decreases |
-| Max FPS | 50 | If average FPS exceeds this, render distance increases |
-| FPS Samples | 15 | Number of FPS samples to average before deciding a change |
-
 #### Render Distance
 | Option | Default | Description |
 |---|---|---|
 | Min Render Distance | 4 | The mod will never go below this value (chunks) |
 | Max Render Distance | 12 | The mod will never exceed this value (chunks) |
+| Min FPS | 30 | If average FPS drops below this, render distance decreases |
+| Max FPS | 50 | If average FPS exceeds this, render distance increases |
+| FPS Samples | 15 | Number of FPS samples to average before deciding a change (1% Low filtering applied) |
+| Memory Guard | true | Prevents RD increase if RAM usage exceeds 85% |
+
+#### Simulation Distance *(new)*
+| Option | Default | Description |
+|---|---|---|
+| Dynamic Simulation | false | Enable/disable dynamic simulation distance adjustment |
+| Min Simulation Distance | 4 | Minimum simulation range (chunks) |
+| Max Simulation Distance | 12 | Maximum simulation range (chunks) |
 
 #### Cooldown
 | Option | Default | Description |
@@ -70,24 +79,25 @@ All options available in-game via **Mods → FPS Horizon → Config**.
 | Option | Default | Description |
 |---|---|---|
 | Enable Culling | true | Enables distance-based chunk and entity culling |
-| Vertical Scale | 2.00x | How aggressively chunks above/below are culled (0.50x–10.0x) |
-| Horizontal Extension | 10% | Extends the render ellipsoid horizontally (0–100%) |
+| Vertical Scale | 100% | How aggressively chunks above/below are culled (0–1000%) |
+| Horizontal Extension | 0% | Extends the render ellipsoid horizontally (0–100%) |
 | Cull Entities | true | Applies culling to entities (mobs, items, etc) as well |
 | Dynamic Culling *(experimental)* | false | Auto-adjusts culling based on current render distance |
 | Profiles *(experimental)* | false | Use custom culling profiles per render distance |
 
 **Dynamic Culling** adjusts automatically:
-- RD 1–2: Vertical 0.50x, Horizontal 30%
-- RD 3: Vertical 0.50x, Horizontal 40%
+- RD 1–2: Vertical 50%, Horizontal 30%
+- RD 3: Vertical 50%, Horizontal 40%
 - RD 4+: Uses your configured slider values
 
-**Culling Profiles** let you create named profiles with specific vertical/horizontal culling values for a given render distance (exact value or range). When active, the Vertical and Horizontal sliders are disabled and the matching profile is applied automatically. Profiles are saved in `fps_horizon_profiles.json` in your config folder.
+**Culling Profiles** let you create named profiles with specific vertical/horizontal culling values for a given render distance (exact value or range). When active, the Vertical and Horizontal sliders are ignored.
 
 #### Debug
 | Option | Default | Description |
 |---|---|---|
 | Show RD changes | false | Shows render distance changes in the Action Bar |
 | Verbose debug | false | Shows FPS, state, cooldown and culling info every tick |
+| Micro-HUD | false | Display compact indicator of mod state in debug overlay |
 
 ### 🚀 Installation
 
@@ -97,6 +107,18 @@ All options available in-game via **Mods → FPS Horizon → Config**.
 4. Launch and configure via **Mods → FPS Horizon → Config**
 
 ### 📋 Changelog
+
+**v1.3.0** *(Current)*
+- **UI Redesign**: Unified Render Distance tab with 2-column layout (Min/Max RD sliders on left, FPS control on right)
+- **Dynamic Simulation Distance**: New category for auto-adjusting CPU simulation alongside GPU render distance
+- **Auto-detect Max RD**: Automatically detects maximum supported render distance (compatible with mods like Farsight that extend limits)
+- **Memory Guard**: Prevents render distance increases if RAM usage exceeds 85%, reducing garbage collection stutters
+- **1% Low Filtering**: FPS samples now exclude micro-stutters for more stable decisions
+- **Entity Whitelist**: Bosses (Ender Dragon, Wither), item frames, and paintings are permanently whitelisted from culling
+- **Micro-HUD Display**: Optional compact indicator in debug overlay showing mod state and active optimizations
+- **Silent Reload System**: Smooth chunk updates without F3+A reload visual glitches, especially in caves
+- **World-space Culling**: Fixed cave holes when looking down—culling now works in world coordinates instead of camera-relative
+- **Profile Configuration Fixes**: Resolved value bleeding between profiles and UI state persistence issues
 
 **v1.1.0**
 - Added distance culling system (chunks and entities via ellipsoid)
@@ -116,17 +138,22 @@ All options available in-game via **Mods → FPS Horizon → Config**.
 
 ## 🇦🇷 Español
 
-**FPS Horizon** es un mod cliente de Forge que ajusta automáticamente la distancia de renderizado según el promedio de FPS, manteniendo el juego fluido sin configuración manual.
+**FPS Horizon** es un mod cliente de Forge que ajusta automáticamente la distancia de renderizado y la distancia de simulación según el promedio de FPS, manteniendo el juego fluido sin configuración manual.
 
 ### ✨ Características
 
 - **Distancia dinámica** — aumenta o reduce el render distance según tus FPS promedio
+- **Distancia de simulación dinámica** *(nuevo)* — ajusta automáticamente la simulación para mejorar rendimiento de CPU junto con GPU
 - **Transiciones de niebla animadas** — niebla suave oculta la carga de chunks durante los cambios
-- **Culling de distancia** — reduce la carga de GPU descartando chunks y entidades fuera de un elipsoide
-- **Perfiles de culling** — configuraciones personalizadas de culling por distancia de renderizado, guardadas en `fps_horizon_profiles.json`
-- **Culling dinámico** *(experimental)* — ajusta automáticamente el culling según la distancia actual
-- **Configuración en tiempo real** — todo cambiable en el juego desde el menú de Mods, sin reiniciar
-- **Compatible con Embeddium** — integrado con el pipeline de renderizado de Embeddium vía Mixins
+- **Culling de distancia** — reduce carga de GPU descartando chunks y entidades fuera de un elipsoide
+- **Lista blanca de entidades** — Jefes, marcos de ítems y cuadros nunca se descartan
+- **Memory Guard** — impide aumentar render distance si el RAM supera 85%, evitando tirones de garbage collection
+- **Filtrado de 1% Low** — ignora micro-tirones al calcular el promedio de FPS
+- **Indicador Micro-HUD** *(nuevo)* — pequeño indicador visual opcional en debug mostrando estado del mod
+- **Perfiles de culling** — configuraciones personalizadas de culling por distancia, guardadas en `fps_horizon_profiles.json`
+- **Culling dinámico** *(experimental)* — ajusta automáticamente según la distancia actual
+- **Configuración en tiempo real** — todo cambiable en-juego desde menú de Mods, sin reiniciar
+- **Compatible con Embeddium** — integrado con pipeline de renderizado vía Mixins
 - **Solo cliente** — funciona en cualquier servidor
 
 ### 📋 Requisitos
@@ -140,18 +167,22 @@ All options available in-game via **Mods → FPS Horizon → Config**.
 
 Todas las opciones disponibles en **Mods → FPS Horizon → Config**.
 
-#### Control de FPS
-| Opción | Por defecto | Descripción |
-|---|---|---|
-| FPS Mínimos | 30 | Si el promedio baja de este valor, se reduce la distancia |
-| FPS Máximos | 50 | Si el promedio supera este valor, se aumenta la distancia |
-| Muestras de FPS | 15 | Cantidad de muestras a promediar antes de decidir un cambio |
-
 #### Distancia de Renderizado
 | Opción | Por defecto | Descripción |
 |---|---|---|
 | Distancia Mínima | 4 | El mod nunca bajará de este valor (chunks) |
 | Distancia Máxima | 12 | El mod nunca superará este valor (chunks) |
+| FPS Mínimos | 30 | Si el promedio baja, se reduce la distancia |
+| FPS Máximos | 50 | Si el promedio sube, se aumenta la distancia |
+| Muestras de FPS | 15 | Cantidad de muestras a promediar (con filtrado de 1% Low) |
+| Memory Guard | true | Impide aumentar RD si RAM supera 85% |
+
+#### Distancia de Simulación *(nuevo)*
+| Opción | Por defecto | Descripción |
+|---|---|---|
+| Simulación Dinámica | false | Activar/desactivar ajuste dinámico de simulación |
+| Distancia Mínima | 4 | Rango mínimo de simulación (chunks) |
+| Distancia Máxima | 12 | Rango máximo de simulación (chunks) |
 
 #### Cooldown
 | Opción | Por defecto | Descripción |
@@ -164,32 +195,33 @@ Todas las opciones disponibles en **Mods → FPS Horizon → Config**.
 |---|---|---|
 | Activar Niebla | true | Activa la niebla que oculta la carga de chunks |
 | Inicio de Niebla | 0 bloques | Distancia donde empieza la niebla |
-| Fin de Niebla | 0.80 | Fracción de la distancia donde la niebla se vuelve opaca |
-| Factor de Cierre | 0.80 | Qué tan agresivo es el cierre de niebla durante un cambio |
+| Fin de Niebla | 0.80 | Fracción de distancia donde la niebla se vuelve opaca |
+| Factor de Cierre | 0.80 | Qué tan agresivo es el cierre durante un cambio |
 | Velocidad de Niebla | 0.05 | Velocidad de animación (0.01 = lento, 0.5 = rápido) |
 
 #### Culling
 | Opción | Por defecto | Descripción |
 |---|---|---|
 | Activar Culling | true | Activa el culling de chunks y entidades por distancia |
-| Escala Vertical | 2.00x | Qué tan agresivamente se descartan chunks arriba/abajo (0.50x–10.0x) |
-| Extensión Horizontal | 10% | Extiende el elipsoide horizontalmente (0–100%) |
-| Culling de Entidades | true | Aplica el culling también a entidades (mobs, items, etc) |
-| Culling Dinámico *(experimental)* | false | Ajusta automáticamente el culling según la distancia actual |
-| Perfiles *(experimental)* | false | Usá perfiles de culling personalizados por distancia de renderizado |
+| Escala Vertical | 100% | Qué tan agresivamente se descartan chunks arriba/abajo (0–1000%) |
+| Extensión Horizontal | 0% | Extiende el elipsoide horizontalmente (0–100%) |
+| Culling de Entidades | true | Aplica culling también a entidades (mobs, items, etc) |
+| Culling Dinámico *(experimental)* | false | Ajusta automáticamente según la distancia actual |
+| Perfiles *(experimental)* | false | Usa perfiles de culling personalizados por distancia |
 
 **Culling Dinámico** ajusta automáticamente:
-- RD 1–2: Vertical 0.50x, Horizontal 30%
-- RD 3: Vertical 0.50x, Horizontal 40%
+- RD 1–2: Vertical 50%, Horizontal 30%
+- RD 3: Vertical 50%, Horizontal 40%
 - RD 4+: Usa tus valores configurados
 
-**Perfiles de Culling** — creá perfiles con nombre y valores específicos de culling vertical y horizontal para una distancia de renderizado dada (valor exacto o rango). Cuando está activo, los sliders de Vertical y Horizontal se deshabilitan y se aplica el perfil que corresponda automáticamente. Los perfiles se guardan en `fps_horizon_profiles.json` en tu carpeta de config.
+**Perfiles de Culling** — creá perfiles con valores específicos de culling vertical y horizontal para una distancia dada (exacta o rango). Cuando está activo, los sliders se ignoran.
 
 #### Debug
 | Opción | Por defecto | Descripción |
 |---|---|---|
-| Mostrar cambios de RD | false | Muestra los cambios de distancia en el Action Bar |
+| Mostrar cambios de RD | false | Muestra cambios de distancia en el Action Bar |
 | Debug detallado | false | Muestra FPS, estado, cooldown e info de culling en cada tick |
+| Indicador Micro-HUD | false | Muestra compacto indicador de estado del mod en debug |
 
 ### 🚀 Instalación
 
@@ -200,11 +232,23 @@ Todas las opciones disponibles en **Mods → FPS Horizon → Config**.
 
 ### 📋 Changelog
 
+**v1.3.0** *(Actual)*
+- **Rediseño de UI**: Pestaña Render Distance unificada con layout de 2 columnas (Min/Max RD a izquierda, control FPS a derecha)
+- **Distancia de Simulación Dinámica**: Nueva categoría para ajustar CPU junto con GPU
+- **Auto-detección de Máximo RD**: Detecta automáticamente límite máximo soportado (compatible con mods como Farsight)
+- **Memory Guard**: Impide aumentar RD si RAM supera 85%, reduciendo tirones de garbage collection
+- **Filtrado 1% Low**: Muestras de FPS ahora excluyen micro-tirones para decisiones más estables
+- **Lista Blanca de Entidades**: Jefes, marcos de ítems y cuadros nunca se descartan
+- **Indicador Micro-HUD**: Indicador compacto opcional en overlay de debug
+- **Sistema de Recarga Silenciosa**: Actualización suave de chunks sin glitches de F3+A, especialmente en cuevas
+- **Culling en Coordenadas del Mundo**: Corregidos huecos en cuevas al mirar hacia abajo
+- **Correcciones de Perfiles**: Resueltos problemas de compatibilidad entre perfiles y persistencia de UI
+
 **v1.1.0**
 - Sistema de culling por distancia (chunks y entidades vía elipsoide)
-- Perfiles de culling — valores personalizados por distancia de renderizado (exacto o rango)
+- Perfiles de culling — valores personalizados por distancia (exacto o rango)
 - Culling dinámico *(experimental)* — ajusta automáticamente para distancias bajas
-- Las transiciones de niebla ahora también se disparan ante cambios significativos de culling vertical
+- Transiciones de niebla también se disparan en cambios significativos de culling
 - Corregido bug de inicialización de niebla al cargar el mundo
 
 **v1.0.0**
