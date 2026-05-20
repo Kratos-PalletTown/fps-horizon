@@ -8,6 +8,8 @@
     "KratosPacketMixin",
     "KratosEmbeddiumMixin",
     "KratosSodiumAccessor",
+    "KratosRenderDistanceAccessor",
+    "KratosSimulationDistanceAccessor",
     "KratosF3AMixin",
     "KratosChunkCullingMixin",
     "KratosEntityCullingMixin",
