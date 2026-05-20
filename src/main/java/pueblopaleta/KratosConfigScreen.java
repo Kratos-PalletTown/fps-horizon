@@ -7,24 +7,29 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.OptionInstance;
 import java.util.List;
 import java.util.ArrayList;
 
 public class KratosConfigScreen extends Screen
 {
     private final Screen parent;
+    private int detectedMaxRD = 32;
+    private int detectedMaxSD = 32;
 
     private enum Category {
-        FPS, RENDER_DISTANCE, COOLDOWN, FOG, CULLING, DEBUG;
+        FPS, RENDER_DISTANCE, SIMULATION_DISTANCE, COOLDOWN, FOG, CULLING, DEBUG;
 
         public Component label() {
             return switch (this) {
-                case FPS             -> Component.translatable("fps_horizon.config.fps");
-                case RENDER_DISTANCE -> Component.translatable("fps_horizon.config.render_distance");
-                case COOLDOWN        -> Component.translatable("fps_horizon.config.cooldown");
-                case FOG             -> Component.translatable("fps_horizon.config.fog");
-                case DEBUG           -> Component.translatable("fps_horizon.config.debug");
-                case CULLING         -> Component.translatable("fps_horizon.config.culling");
+                case FPS                   -> Component.translatable("fps_horizon.config.fps");
+                case RENDER_DISTANCE       -> Component.translatable("fps_horizon.config.render_distance");
+                case SIMULATION_DISTANCE   -> Component.translatable("fps_horizon.config.simulation_distance");
+                case COOLDOWN              -> Component.translatable("fps_horizon.config.cooldown");
+                case FOG                   -> Component.translatable("fps_horizon.config.fog");
+                case DEBUG                 -> Component.translatable("fps_horizon.config.debug");
+                case CULLING               -> Component.translatable("fps_horizon.config.culling");
             };
         }
     }
@@ -49,6 +54,10 @@ public class KratosConfigScreen extends Screen
     @Override
     protected void init() {
         this.categoryWidgets.clear();
+        
+        // Detect max RD and SD at init time
+        this.detectedMaxRD = getMaxRenderDistance();
+        this.detectedMaxSD = getMaxSimulationDistance();
 
         // Tab buttons on the left
         int tabY = 40;
@@ -109,16 +118,36 @@ public class KratosConfigScreen extends Screen
                     Component.translatable("fps_horizon.config.fpsSamples"),
                     KratosConfig.FPS_SAMPLES, 5, 60,
                     Component.translatable("fps_horizon.config.fpsSamples.tooltip")));
+                y = addToggle(startX, y, CycleButton.onOffBuilder(KratosConfig.MEMORY_GUARD.get())
+                    .withTooltip(v -> Tooltip.create(Component.translatable("fps_horizon.config.memoryGuard.tooltip")))
+                    .create(0, 0, W, H,
+                        Component.translatable("fps_horizon.config.memoryGuard"),
+                        (btn, val) -> KratosConfig.MEMORY_GUARD.set(val)));
             }
             case RENDER_DISTANCE -> {
                 y = addSlider(startX, y, new IntSlider(0, 0, W, H,
                     Component.translatable("fps_horizon.config.minRenderDistance"),
-                    KratosConfig.MIN_RD, 2, 32,
-                    Component.translatable("fps_horizon.config.minRenderDistance.tooltip")));
+                    KratosConfig.MIN_RD, 2, this.detectedMaxRD,
+                    Component.literal("⚡ Soporte detectado: " + this.detectedMaxRD + " chunks")));
                 y = addSlider(startX, y, new IntSlider(0, 0, W, H,
                     Component.translatable("fps_horizon.config.maxRenderDistance"),
-                    KratosConfig.MAX_RD, 2, 32,
-                    Component.translatable("fps_horizon.config.maxRenderDistance.tooltip")));
+                    KratosConfig.MAX_RD, 2, this.detectedMaxRD,
+                    Component.literal("⚡ Soporte detectado: " + this.detectedMaxRD + " chunks")));
+            }
+            case SIMULATION_DISTANCE -> {
+                y = addToggle(startX, y, CycleButton.onOffBuilder(KratosConfig.DYNAMIC_SIMULATION.get())
+                    .withTooltip(v -> Tooltip.create(Component.translatable("fps_horizon.config.dynamicSimulation.tooltip")))
+                    .create(0, 0, W, H,
+                        Component.translatable("fps_horizon.config.dynamicSimulation"),
+                        (btn, val) -> KratosConfig.DYNAMIC_SIMULATION.set(val)));
+                y = addSlider(startX, y, new IntSlider(0, 0, W, H,
+                    Component.translatable("fps_horizon.config.minSimulationDistance"),
+                    KratosConfig.MIN_SD, 2, this.detectedMaxSD,
+                    Component.literal("⚡ Soporte detectado: " + this.detectedMaxSD + " chunks")));
+                y = addSlider(startX, y, new IntSlider(0, 0, W, H,
+                    Component.translatable("fps_horizon.config.maxSimulationDistance"),
+                    KratosConfig.MAX_SD, 2, this.detectedMaxSD,
+                    Component.literal("⚡ Soporte detectado: " + this.detectedMaxSD + " chunks")));
             }
             case COOLDOWN -> {
                 y = addSlider(startX, y, new IntSlider(0, 0, W, H,
@@ -223,6 +252,11 @@ public class KratosConfigScreen extends Screen
                     .create(0, 0, W, H,
                         Component.translatable("fps_horizon.config.debugVerbose"),
                         (btn, val) -> KratosConfig.DEBUG_VERBOSE.set(val)));
+                y = addToggle(startX, y, CycleButton.onOffBuilder(KratosConfig.MICRO_HUD.get())
+                    .withTooltip(v -> Tooltip.create(Component.translatable("fps_horizon.config.microHud.tooltip")))
+                    .create(0, 0, W, H,
+                        Component.translatable("fps_horizon.config.microHud"),
+                        (btn, val) -> KratosConfig.MICRO_HUD.set(val)));
             }
         }
     }
@@ -269,7 +303,51 @@ public class KratosConfigScreen extends Screen
         this.minecraft.setScreen(this.parent);
     }
 
-    // ── Int Slider ──────────────────────────────────────────────────────────────
+    /**
+     * Detects the maximum supported Render Distance by querying the OptionInstance.
+     */
+    private int getMaxRenderDistance() {
+        try {
+            final Minecraft mc = this.minecraft;
+            if (mc != null && mc.options != null) {
+                final OptionInstance<Integer> rdOption = mc.options.renderDistance();
+                if (rdOption != null) {
+                    // Try to access maxInclusive via Mixin Accessor
+                    try {
+                        final Object range = rdOption.range;
+                        if (range instanceof net.minecraft.client.OptionInstance.IntRange intRange) {
+                            return ((pueblopaleta.mixin.KratosRenderDistanceAccessor) intRange).kratos$getMaxInclusive();
+                        }
+                    } catch (final Throwable t) {}
+                }
+            }
+        } catch (final Throwable t) {}
+        return 32; // Fallback
+    }
+
+    /**
+     * Detects the maximum supported Simulation Distance.
+     */
+    private int getMaxSimulationDistance() {
+        try {
+            final Minecraft mc = this.minecraft;
+            if (mc != null && mc.options != null) {
+                final OptionInstance<Integer> sdOption = mc.options.simulationDistance();
+                if (sdOption != null) {
+                    // Try to access maxInclusive via Mixin Accessor
+                    try {
+                        final Object range = sdOption.range;
+                        if (range instanceof net.minecraft.client.OptionInstance.IntRange intRange) {
+                            return ((pueblopaleta.mixin.KratosSimulationDistanceAccessor) intRange).kratos$getSimMaxInclusive();
+                        }
+                    } catch (final Throwable t) {}
+                }
+            }
+        } catch (final Throwable t) {}
+        return 32; // Fallback
+    }
+
+    // ── Int Slider ────────────────────────────────────────────────────────────
     public static class IntSlider extends AbstractSliderButton {
         private final net.minecraftforge.common.ForgeConfigSpec.IntValue config;
         private final int min, max;
@@ -323,40 +401,7 @@ public class KratosConfigScreen extends Screen
         }
     }
 
-    // ── Step Int Slider (saltos fijos) ─────────────────────────────────────────
-    public static class StepIntSlider extends AbstractSliderButton {
-        private final net.minecraftforge.common.ForgeConfigSpec.IntValue config;
-        private final int min, max, step;
-        private final Component label;
-
-        StepIntSlider(int x, int y, int w, int h, Component label,
-                      net.minecraftforge.common.ForgeConfigSpec.IntValue config,
-                      int min, int max, int step, Component tooltip) {
-            super(x, y, w, h, Component.empty(), (double)(config.get() - min) / (max - min));
-            this.config = config; this.min = min; this.max = max;
-            this.step = step; this.label = label;
-            this.setTooltip(Tooltip.create(tooltip));
-            this.updateMessage();
-        }
-
-        private int snappedValue() {
-            int raw = min + (int) Math.round(this.value * (max - min));
-            return Math.min(max, min + Math.round((float)(raw - min) / step) * step);
-        }
-
-        @Override
-        protected void updateMessage() {
-            this.setMessage(Component.literal(label.getString() + ": " + snappedValue()));
-        }
-
-        @Override
-        protected void applyValue() {
-            config.set(snappedValue());
-        }
-    }
-
-
-    // ── Percent Slider ──────────────────────────────────────────────────────────
+    // ── Percent Slider ───────────────────────────────────────────────────────────
     public static class PercentSlider extends AbstractSliderButton {
         private final java.util.function.Supplier<Integer> getter;
         private final java.util.function.Consumer<Integer> setter;
