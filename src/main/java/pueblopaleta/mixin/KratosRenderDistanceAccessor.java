@@ -6,8 +6,7 @@ import net.minecraft.client.OptionInstance;
 
 /**
  * Accesses the maxInclusive field of IntRange from OptionInstance.
- * This allows us to detect the actual maximum render distance supported,
- * including mods like Farsight that extend the limit beyond 32.
+ * Used for both render distance and simulation distance max detection.
  */
 @Mixin(OptionInstance.IntRange.class)
 public interface KratosRenderDistanceAccessor {

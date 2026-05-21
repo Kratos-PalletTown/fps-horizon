@@ -4,6 +4,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -13,28 +14,31 @@ public class KratosProfilesScreen extends Screen
 {
     private final Screen parent;
 
-    // Modos de la pantalla
     private enum Mode { LIST, ADD_TYPE, ADD_FORM, DELETE_SELECT }
     private Mode mode = Mode.LIST;
 
-    // Lista
     private final List<KratosProfiles.Profile> selected = new ArrayList<>();
-    private boolean deleteMode = false;
 
-    // Add form
+    // Add/edit form state
     private KratosProfiles.ProfileType addType;
     private EditBox nameBox;
     private EditBox rdExactBox;
     private EditBox rdMinBox;
     private EditBox rdMaxBox;
-    private int addVertical   = 4;   // default 1.0x
+    private int addVertical   = 4;   // default 100%
     private int addHorizontal = 0;   // default 0%
     private String errorMsg = "";
-    private KratosProfiles.Profile editingProfile = null; // null = nuevo
+    private KratosProfiles.Profile editingProfile = null;
 
-    private static final int W  = 200;
+    // Scroll
+    private int scrollOffset = 0;
+    private static final int ROW_H   = 26;
+    private static final int LIST_TOP = 44;
+    private static final int LIST_BOTTOM_PAD = 60; // space for bottom buttons
+
+    private static final int W  = 220;
     private static final int H  = 20;
-    private static final int BW = 90; // boton ancho pequeño
+    private static final int BW = 100;
 
     public KratosProfilesScreen(final Screen parent) {
         super(Component.translatable("fps_horizon.profiles.title"));
@@ -46,9 +50,9 @@ public class KratosProfilesScreen extends Screen
         this.clearWidgets();
         this.errorMsg = "";
         switch (mode) {
-            case LIST         -> initList();
-            case ADD_TYPE     -> initAddType();
-            case ADD_FORM     -> initAddForm();
+            case LIST          -> initList();
+            case ADD_TYPE      -> initAddType();
+            case ADD_FORM      -> initAddForm();
             case DELETE_SELECT -> initDeleteSelect();
         }
     }
@@ -57,22 +61,65 @@ public class KratosProfilesScreen extends Screen
     private void initList() {
         final int cx = this.width / 2;
         final int bottom = this.height - 28;
+        final int listBottom = bottom - 32;
+        final int visibleRows = (listBottom - LIST_TOP) / ROW_H;
+        final int totalProfiles = KratosProfiles.getProfiles().size();
 
-        // Botones de accion abajo
+        // Clamp scroll
+        scrollOffset = Math.max(0, Math.min(scrollOffset,
+            Math.max(0, totalProfiles - visibleRows)));
+
+        // Render visible profiles
+        int y = LIST_TOP;
+        for (int i = scrollOffset; i < Math.min(scrollOffset + visibleRows, totalProfiles); i++) {
+            final KratosProfiles.Profile p = KratosProfiles.getProfiles().get(i);
+            final KratosProfiles.Profile fp = p;
+
+            this.addRenderableWidget(Button.builder(
+                Component.literal(p.displayName()),
+                b -> {}
+            ).bounds(cx - W / 2, y, W - 46, H).build());
+
+            this.addRenderableWidget(Button.builder(
+                Component.literal("✎"),
+                b -> { editingProfile = fp; addType = fp.type;
+                       addVertical = fp.vertical; addHorizontal = fp.horizontal;
+                       mode = Mode.ADD_FORM; this.init(); }
+            ).bounds(cx + W / 2 - 44, y, 20, H).build());
+
+            this.addRenderableWidget(Button.builder(
+                Component.literal("✗"),
+                b -> { KratosProfiles.removeProfile(fp); this.init(); }
+            ).bounds(cx + W / 2 - 22, y, 20, H).build());
+
+            y += ROW_H;
+        }
+
+        // Scroll arrows (only if needed)
+        if (totalProfiles > visibleRows) {
+            final Button up = Button.builder(Component.literal("▲"),
+                b -> { scrollOffset = Math.max(0, scrollOffset - 1); this.init(); }
+            ).bounds(cx + W / 2 + 4, LIST_TOP, 18, 18).build();
+            up.active = scrollOffset > 0;
+            this.addRenderableWidget(up);
+
+            final Button down = Button.builder(Component.literal("▼"),
+                b -> { scrollOffset = Math.min(totalProfiles - visibleRows, scrollOffset + 1); this.init(); }
+            ).bounds(cx + W / 2 + 4, listBottom - 18, 18, 18).build();
+            down.active = scrollOffset < totalProfiles - visibleRows;
+            this.addRenderableWidget(down);
+        }
+
+        // Bottom buttons
         this.addRenderableWidget(Button.builder(
             Component.translatable("fps_horizon.profiles.add"),
-            b -> { 
-                mode = Mode.ADD_TYPE; 
-                editingProfile = null; 
-                addVertical = 4;
-                addHorizontal = 0;
-                this.init(); 
-            }
+            b -> { mode = Mode.ADD_TYPE; editingProfile = null;
+                   addVertical = 4; addHorizontal = 0; this.init(); }
         ).bounds(cx - BW - 4, bottom, BW, H).build());
 
         final Button deleteBtn = Button.builder(
             Component.translatable("fps_horizon.profiles.delete"),
-            b -> { mode = Mode.DELETE_SELECT; selected.clear(); this.init(); }
+            b -> { mode = Mode.DELETE_SELECT; selected.clear(); scrollOffset = 0; this.init(); }
         ).bounds(cx + 4, bottom, BW, H).build();
         deleteBtn.active = !KratosProfiles.getProfiles().isEmpty();
         this.addRenderableWidget(deleteBtn);
@@ -81,33 +128,6 @@ public class KratosProfilesScreen extends Screen
             Component.translatable("gui.back"),
             b -> this.onClose()
         ).bounds(cx - 50, bottom - 26, 100, H).build());
-
-        // Lista de perfiles como botones
-        int y = 40;
-        for (final KratosProfiles.Profile p : KratosProfiles.getProfiles()) {
-            final KratosProfiles.Profile fp = p;
-            // Boton perfil
-            this.addRenderableWidget(Button.builder(
-                Component.literal(p.displayName()),
-                b -> {}
-            ).bounds(cx - W / 2, y, W - 46, H).build());
-            // Editar
-            this.addRenderableWidget(Button.builder(
-                Component.literal("✎"),
-                b -> { editingProfile = fp; addType = fp.type; mode = Mode.ADD_FORM; this.init(); }
-            ).bounds(cx + W / 2 - 44, y, 20, H).build());
-            // Eliminar
-            this.addRenderableWidget(Button.builder(
-                Component.literal("✗"),
-                b -> { KratosProfiles.removeProfile(fp); this.init(); }
-            ).bounds(cx + W / 2 - 22, y, 20, H).build());
-
-            y += H + 4;
-        }
-
-        if (KratosProfiles.getProfiles().isEmpty()) {
-            // Se muestra en render
-        }
     }
 
     // ── ADD TYPE ────────────────────────────────────────────────────────────────
@@ -136,7 +156,6 @@ public class KratosProfilesScreen extends Screen
         final int cx = this.width / 2;
         int y = 36;
 
-        // Nombre
         nameBox = new EditBox(this.font, cx - W / 2, y, W, H,
             Component.translatable("fps_horizon.profiles.name"));
         nameBox.setMaxLength(32);
@@ -170,27 +189,24 @@ public class KratosProfilesScreen extends Screen
             y += H + 6;
         }
 
-        // Slider vertical
-        final int initV = editingProfile != null ? editingProfile.vertical : addVertical;
-        addVertical = initV;
+        // Vertical slider
+        final int initV = addVertical;
         this.addRenderableWidget(new KratosConfigScreen.CullingVerticalSlider(
             cx - W / 2, y, W, H,
             Component.translatable("fps_horizon.config.cullingVertical"),
-            () -> addVertical, v -> addVertical = v,
+            () -> initV, v -> addVertical = v,
             Component.translatable("fps_horizon.config.cullingVertical.tooltip")));
         y += H + 6;
 
-        // Slider horizontal
-        final int initH = editingProfile != null ? editingProfile.horizontal : addHorizontal;
-        addHorizontal = initH;
+        // Horizontal slider
+        final int initH = addHorizontal;
         this.addRenderableWidget(new KratosConfigScreen.PercentSlider(
             cx - W / 2, y, W, H,
             Component.translatable("fps_horizon.config.cullingHorizontal"),
-            () -> addHorizontal, v -> addHorizontal = v, 0, 100,
+            () -> initH, v -> addHorizontal = v, 0, 100,
             Component.translatable("fps_horizon.config.cullingHorizontal.tooltip")));
         y += H + 10;
 
-        // Guardar / Cancelar
         this.addRenderableWidget(Button.builder(
             Component.translatable("fps_horizon.profiles.save"),
             b -> trySave()
@@ -206,25 +222,19 @@ public class KratosProfilesScreen extends Screen
     private void initDeleteSelect() {
         final int cx = this.width / 2;
         final int bottom = this.height - 28;
+        final int listBottom = bottom - 32;
+        final int visibleRows = (listBottom - LIST_TOP) / ROW_H;
+        final int totalProfiles = KratosProfiles.getProfiles().size();
 
-        // Boton eliminar (rojo si hay seleccionados)
-        final Button delBtn = Button.builder(
-            Component.translatable("fps_horizon.profiles.confirm_delete"),
-            b -> showDeleteConfirm()
-        ).bounds(cx - BW - 4, bottom, BW, H).build();
-        delBtn.active = !selected.isEmpty();
-        this.addRenderableWidget(delBtn);
+        scrollOffset = Math.max(0, Math.min(scrollOffset,
+            Math.max(0, totalProfiles - visibleRows)));
 
-        this.addRenderableWidget(Button.builder(
-            Component.translatable("gui.cancel"),
-            b -> { mode = Mode.LIST; selected.clear(); this.init(); }
-        ).bounds(cx + 4, bottom, BW, H).build());
-
-        // Lista seleccionable
-        int y = 40;
-        for (final KratosProfiles.Profile p : KratosProfiles.getProfiles()) {
+        int y = LIST_TOP;
+        for (int i = scrollOffset; i < Math.min(scrollOffset + visibleRows, totalProfiles); i++) {
+            final KratosProfiles.Profile p = KratosProfiles.getProfiles().get(i);
             final KratosProfiles.Profile fp = p;
             final boolean sel = selected.contains(p);
+
             this.addRenderableWidget(Button.builder(
                 Component.literal((sel ? "§c[✓] " : "[ ] ") + p.displayName()),
                 b -> {
@@ -233,23 +243,46 @@ public class KratosProfilesScreen extends Screen
                     this.init();
                 }
             ).bounds(cx - W / 2, y, W, H).build());
-            y += H + 4;
+            y += ROW_H;
         }
-    }
 
-    private void showDeleteConfirm() {
-        // Popup de confirmacion usando otra pantalla simple
-        this.minecraft.setScreen(new ConfirmDeleteScreen(this, selected));
+        // Scroll arrows
+        if (totalProfiles > visibleRows) {
+            final Button up = Button.builder(Component.literal("▲"),
+                b -> { scrollOffset = Math.max(0, scrollOffset - 1); this.init(); }
+            ).bounds(cx + W / 2 + 4, LIST_TOP, 18, 18).build();
+            up.active = scrollOffset > 0;
+            this.addRenderableWidget(up);
+
+            final Button down = Button.builder(Component.literal("▼"),
+                b -> { scrollOffset = Math.min(totalProfiles - visibleRows, scrollOffset + 1); this.init(); }
+            ).bounds(cx + W / 2 + 4, listBottom - 18, 18, 18).build();
+            down.active = scrollOffset < totalProfiles - visibleRows;
+            this.addRenderableWidget(down);
+        }
+
+        final Button delBtn = Button.builder(
+            Component.translatable("fps_horizon.profiles.confirm_delete"),
+            b -> minecraft.setScreen(new ConfirmDeleteScreen(this, selected))
+        ).bounds(cx - BW - 4, bottom, BW, H).build();
+        delBtn.active = !selected.isEmpty();
+        this.addRenderableWidget(delBtn);
+
+        this.addRenderableWidget(Button.builder(
+            Component.translatable("gui.cancel"),
+            b -> { mode = Mode.LIST; selected.clear(); scrollOffset = 0; this.init(); }
+        ).bounds(cx + 4, bottom, BW, H).build());
     }
 
     void confirmDelete() {
         KratosProfiles.removeProfiles(new ArrayList<>(selected));
         selected.clear();
+        scrollOffset = 0;
         mode = Mode.LIST;
         this.init();
     }
 
-    // ── SAVE LOGIC ──────────────────────────────────────────────────────────────
+    // ── SAVE ────────────────────────────────────────────────────────────────────
     private void trySave() {
         errorMsg = "";
         final String name = nameBox.getValue().trim();
@@ -272,7 +305,7 @@ public class KratosProfilesScreen extends Screen
         final KratosProfiles.Profile conflict = KratosProfiles.findConflict(
             addType, rdEx, rdMn, rdMx, editingProfile);
         if (conflict != null) {
-            errorMsg = "§cConflicto con perfil: " + conflict.displayName();
+            errorMsg = "§cConflicto con: " + conflict.displayName();
             return;
         }
 
@@ -290,7 +323,21 @@ public class KratosProfilesScreen extends Screen
                 name, addType, rdEx, rdMn, rdMx, addVertical, addHorizontal));
         }
         mode = Mode.LIST;
+        scrollOffset = 0;
         this.init();
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (mode == Mode.LIST || mode == Mode.DELETE_SELECT) {
+            final int total = KratosProfiles.getProfiles().size();
+            final int visibleRows = (this.height - 28 - 32 - LIST_TOP) / ROW_H;
+            scrollOffset = (int) Math.max(0, Math.min(total - visibleRows,
+                scrollOffset - delta));
+            this.init();
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
     @Override
@@ -306,11 +353,10 @@ public class KratosProfilesScreen extends Screen
                         this.width / 2, this.height / 2, 0xAAAAAA);
                 }
             }
-            case ADD_TYPE -> {
+            case ADD_TYPE ->
                 g.drawCenteredString(this.font,
                     Component.translatable("fps_horizon.profiles.select_type"),
                     this.width / 2, this.height / 2 - 30, 0xFFFFAA);
-            }
             case ADD_FORM -> {
                 g.drawString(this.font,
                     Component.translatable(editingProfile != null
@@ -320,16 +366,11 @@ public class KratosProfilesScreen extends Screen
                     g.drawCenteredString(this.font, Component.literal(errorMsg),
                         this.width / 2, this.height - 48, 0xFF4444);
                 }
-                // Labels
-                g.drawString(this.font,
-                    Component.translatable("fps_horizon.profiles.name"),
-                    this.width / 2 - W / 2, 28, 0xAAAAAA);
             }
-            case DELETE_SELECT -> {
+            case DELETE_SELECT ->
                 g.drawCenteredString(this.font,
                     Component.translatable("fps_horizon.profiles.select_to_delete"),
                     this.width / 2, 28, 0xFFAAAA);
-            }
         }
         super.render(g, mx, my, delta);
     }
@@ -339,7 +380,7 @@ public class KratosProfilesScreen extends Screen
         this.minecraft.setScreen(parent);
     }
 
-    // ── Confirm Delete Screen ────────────────────────────────────────────────────
+    // ── Confirm Delete ───────────────────────────────────────────────────────────
     static class ConfirmDeleteScreen extends Screen {
         private final KratosProfilesScreen parent;
         private final List<KratosProfiles.Profile> toDelete;

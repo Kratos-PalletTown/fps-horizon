@@ -216,12 +216,6 @@ public class KratosConfigScreen extends Screen
                         Component.translatable("fps_horizon.config.cullingEntidades"),
                         (btn, val) -> KratosConfig.CULLING_ENTIDADES.set(val)));
 
-                y = addToggle(startX, y, CycleButton.onOffBuilder(KratosConfig.CULLING_DINAMICO.get())
-                    .withTooltip(v -> Tooltip.create(Component.translatable("fps_horizon.config.cullingDinamico.tooltip")))
-                    .create(0, 0, W, H,
-                        Component.translatable("fps_horizon.config.cullingDinamico"),
-                        (btn, val) -> KratosConfig.CULLING_DINAMICO.set(val)));
-
                 y += 4;
                 // Toggle perfiles + boton gestionar en la misma fila
                 final int halfW = W / 2 - 2;
@@ -240,6 +234,88 @@ public class KratosConfigScreen extends Screen
                 this.addRenderableWidget(btnGestionar);
                 this.categoryWidgets.add(btnGestionar);
                 y += H + 6;
+            }
+            case SIMULATION -> {
+                // Mode cycle button: OFF / FPS / MS / BOTH
+                y = addToggle(startX, y, CycleButton.<KratosConfig.SdMode>builder(
+                    v -> Component.translatable("fps_horizon.config.sd_mode." + v.name().toLowerCase()))
+                    .withValues(KratosConfig.SdMode.values())
+                    .withInitialValue(KratosConfig.SD_MODE.get())
+                    .withTooltip(v -> Tooltip.create(Component.translatable("fps_horizon.config.sd_mode.tooltip")))
+                    .create(0, 0, W, H,
+                        Component.translatable("fps_horizon.config.sd_mode"),
+                        (btn, val) -> KratosConfig.SD_MODE.set(val)));
+
+                y = addSlider(startX, y, new ValidatedIntSlider(0, 0, W, H,
+                    Component.translatable("fps_horizon.config.minSimDistance"),
+                    KratosConfig.MIN_SD, 2, 32,
+                    Component.translatable("fps_horizon.config.minSimDistance.tooltip"),
+                    () -> KratosConfig.MIN_SD.get() >= KratosConfig.MAX_SD.get()));
+                y = addSlider(startX, y, new ValidatedIntSlider(0, 0, W, H,
+                    Component.translatable("fps_horizon.config.maxSimDistance"),
+                    KratosConfig.MAX_SD, 2, 32,
+                    Component.translatable("fps_horizon.config.maxSimDistance.tooltip"),
+                    () -> KratosConfig.MIN_SD.get() >= KratosConfig.MAX_SD.get()));
+                y = addSlider(startX, y, new IntSlider(0, 0, W, H,
+                    Component.translatable("fps_horizon.config.sdCooldownBajar"),
+                    KratosConfig.SD_COOLDOWN_BAJAR, 5, 400,
+                    Component.translatable("fps_horizon.config.sdCooldownBajar.tooltip")));
+                y = addSlider(startX, y, new IntSlider(0, 0, W, H,
+                    Component.translatable("fps_horizon.config.sdCooldownSubir"),
+                    KratosConfig.SD_COOLDOWN_SUBIR, 5, 400,
+                    Component.translatable("fps_horizon.config.sdCooldownSubir.tooltip")));
+
+                // FPS options (shown always, greyed if mode is MS)
+                final boolean fpsActive = KratosConfig.SD_MODE.get() != KratosConfig.SdMode.MS
+                                       && KratosConfig.SD_MODE.get() != KratosConfig.SdMode.OFF;
+                final IntSlider sdMinFps = new IntSlider(0, 0, W, H,
+                    Component.translatable("fps_horizon.config.sdMinFps"),
+                    KratosConfig.SD_MIN_FPS, 10, 120,
+                    Component.translatable("fps_horizon.config.sdMinFps.tooltip"));
+                sdMinFps.active = fpsActive;
+                y = addSlider(startX, y, sdMinFps);
+
+                final IntSlider sdMaxFps = new IntSlider(0, 0, W, H,
+                    Component.translatable("fps_horizon.config.sdMaxFps"),
+                    KratosConfig.SD_MAX_FPS, 10, 120,
+                    Component.translatable("fps_horizon.config.sdMaxFps.tooltip"));
+                sdMaxFps.active = fpsActive;
+                y = addSlider(startX, y, sdMaxFps);
+
+                // Show warning if MS mode selected but not host
+                final net.minecraft.client.Minecraft _mc = net.minecraft.client.Minecraft.getInstance();
+                final boolean _isHost = _mc.hasSingleplayerServer();
+                final KratosConfig.SdMode _sdMode = KratosConfig.SD_MODE.get();
+                final boolean _msSelected = _sdMode == KratosConfig.SdMode.MS || _sdMode == KratosConfig.SdMode.BOTH;
+                if (_msSelected && !_isHost) {
+                    // Add warning label widget
+                    final net.minecraft.client.gui.components.AbstractWidget warningBtn =
+                        Button.builder(
+                            net.minecraft.network.chat.Component.translatable("fps_horizon.config.sd_ms_warning"),
+                            b -> {}
+                        ).bounds(startX, y, W, H).build();
+                    warningBtn.active = false;
+                    this.addRenderableWidget(warningBtn);
+                    this.categoryWidgets.add(warningBtn);
+                    y += H + 6;
+                }
+
+                // MS options (shown always, greyed if mode is FPS)
+                final boolean msActive = KratosConfig.SD_MODE.get() != KratosConfig.SdMode.FPS
+                                      && KratosConfig.SD_MODE.get() != KratosConfig.SdMode.OFF;
+                final IntSlider sdMaxMs = new IntSlider(0, 0, W, H,
+                    Component.translatable("fps_horizon.config.sdMaxMs"),
+                    KratosConfig.SD_MAX_MS, 10, 500,
+                    Component.translatable("fps_horizon.config.sdMaxMs.tooltip"));
+                sdMaxMs.active = msActive;
+                y = addSlider(startX, y, sdMaxMs);
+
+                final IntSlider sdMinMs = new IntSlider(0, 0, W, H,
+                    Component.translatable("fps_horizon.config.sdMinMs"),
+                    KratosConfig.SD_MIN_MS, 5, 500,
+                    Component.translatable("fps_horizon.config.sdMinMs.tooltip"));
+                sdMinMs.active = msActive;
+                y = addSlider(startX, y, sdMinMs);
             }
             case DEBUG -> {
                 y = addToggle(startX, y, CycleButton.onOffBuilder(KratosConfig.MOSTRAR_DEBUG.get())
@@ -460,6 +536,38 @@ public class KratosConfigScreen extends Screen
         @Override
         protected void applyValue() {
             setter.accept(rawValue());
+        }
+    }
+
+
+    // ── Validated Int Slider (shows warning color when invalid) ─────────────────
+    public static class ValidatedIntSlider extends AbstractSliderButton {
+        private final net.minecraftforge.common.ForgeConfigSpec.IntValue config;
+        private final int min, max;
+        private final Component label;
+        private final java.util.function.BooleanSupplier isInvalid;
+
+        public ValidatedIntSlider(int x, int y, int w, int h, Component label,
+                      net.minecraftforge.common.ForgeConfigSpec.IntValue config,
+                      int min, int max, Component tooltip,
+                      java.util.function.BooleanSupplier isInvalid) {
+            super(x, y, w, h, Component.empty(), (double)(config.get() - min) / (max - min));
+            this.config = config; this.min = min; this.max = max;
+            this.label = label; this.isInvalid = isInvalid;
+            this.setTooltip(Tooltip.create(tooltip));
+            this.updateMessage();
+        }
+
+        @Override
+        protected void updateMessage() {
+            final int val = min + (int) Math.round(this.value * (max - min));
+            final String prefix = isInvalid.getAsBoolean() ? "§c⚠ " : "";
+            this.setMessage(Component.literal(prefix + label.getString() + ": " + val));
+        }
+
+        @Override
+        protected void applyValue() {
+            config.set(min + (int) Math.round(this.value * (max - min)));
         }
     }
 

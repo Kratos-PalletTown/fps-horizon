@@ -58,6 +58,8 @@ public class KratosOptimizer
         KratosProfiles.load();
         final KratosCulling culling = new KratosCulling(this.fog);
         MinecraftForge.EVENT_BUS.register(culling);
+        final KratosSimulation simulation = new KratosSimulation();
+        MinecraftForge.EVENT_BUS.register(simulation);
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, KratosConfig.SPEC);
         ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class,
             () -> new ConfigScreenHandler.ConfigScreenFactory((mc, parent) -> new KratosConfigScreen(parent)));
@@ -185,7 +187,7 @@ public class KratosOptimizer
         }
         final int avgFps = (this.samplesCollected > 0) ? this.calcularPromedio() : 0;
         final String msg = String.format(
-"\00a77[Kratos] \00a7fFPS:\00a7e%d \00a77RD:\00a7e%d \00a77Estado:\00a7b%s \00a77Fog:\00a7d%s \00a77CD:\00a7e%d \00a77Culling:\00a7e%d",
+"\u00a77[Kratos] \u00a7fFPS:\u00a7e%d \u00a77RD:\u00a7e%d \u00a77Estado:\u00a7b%s \u00a77Fog:\u00a7d%s \u00a77CD:\u00a7e%d \u00a77Culling:\u00a7e%d",
             avgFps, this.getRD(mc), this.estado.name(), this.fog.getEstado().name(),
             this.cooldownRestante, silentFrames.get());
         mc.player.displayClientMessage(Component.literal(msg), true);

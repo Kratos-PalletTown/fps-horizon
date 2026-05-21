@@ -75,15 +75,6 @@ public class KratosCulling
                 resetToDefault();
                 return;
             }
-        } else if ((boolean) KratosConfig.CULLING_DINAMICO.get()) {
-            // Culling dinamico experimental
-            if (currentRD <= 2) {
-                vSlider = 2;
-                hSlider = 30;
-            } else if (currentRD == 3) {
-                vSlider = 2;
-                hSlider = 40;
-            }
         }
 
         final double vScaling = (double) vSlider / 4.0;
