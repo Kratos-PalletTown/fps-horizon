@@ -38,7 +38,7 @@ public class KratosPacketMixin
         // If retainer wants to hold this chunk, suppress unload
         if (!retainer.unloading && retainer.tryRetain(packet)) {
             LOGGER.debug("[Kratos] Chunk ({},{}) retenido durante subida de RD",
-                packet.getX(), packet.getZ());
+                packet.pos().x, packet.pos().z);
             ci.cancel();
         }
     }

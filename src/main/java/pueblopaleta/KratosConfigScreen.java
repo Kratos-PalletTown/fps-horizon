@@ -313,7 +313,7 @@ public class KratosConfigScreen extends Screen
 
     @Override
     public void render(final GuiGraphics g, final int mx, final int my, final float delta) {
-        this.renderBackground(g);
+        this.renderBackground(g, mx, my, delta);
 
         // Vertical divider between tabs and content
         final int divX = TAB_W + 12;
@@ -355,12 +355,12 @@ public class KratosConfigScreen extends Screen
 
     // ── Int Slider ────────────────────────────────────────────────────────────
     public static class IntSlider extends AbstractSliderButton {
-        private final net.minecraftforge.common.ForgeConfigSpec.IntValue config;
+        private final net.neoforged.neoforge.common.ModConfigSpec.IntValue config;
         private final int min, max;
         private final Component label;
 
         IntSlider(int x, int y, int w, int h, Component label,
-                  net.minecraftforge.common.ForgeConfigSpec.IntValue config,
+                  net.neoforged.neoforge.common.ModConfigSpec.IntValue config,
                   int min, int max, Component tooltip) {
             super(x, y, w, h, Component.empty(), (double)(config.get() - min) / (max - min));
             this.config = config; this.min = min; this.max = max; this.label = label;
@@ -395,12 +395,12 @@ public class KratosConfigScreen extends Screen
 
     // ── Double Slider ───────────────────────────────────────────────────────────
     public static class DoubleSlider extends AbstractSliderButton {
-        private final net.minecraftforge.common.ForgeConfigSpec.DoubleValue config;
+        private final net.neoforged.neoforge.common.ModConfigSpec.DoubleValue config;
         private final double min, max;
         private final Component label;
 
         DoubleSlider(int x, int y, int w, int h, Component label,
-                     net.minecraftforge.common.ForgeConfigSpec.DoubleValue config,
+                     net.neoforged.neoforge.common.ModConfigSpec.DoubleValue config,
                      double min, double max, Component tooltip) {
             super(x, y, w, h, Component.empty(), (config.get() - min) / (max - min));
             this.config = config; this.min = min; this.max = max; this.label = label;
@@ -521,13 +521,13 @@ public class KratosConfigScreen extends Screen
 
     // ── Validated Int Slider (shows warning color when invalid) ─────────────────
     public static class ValidatedIntSlider extends AbstractSliderButton {
-        private final net.minecraftforge.common.ForgeConfigSpec.IntValue config;
+        private final net.neoforged.neoforge.common.ModConfigSpec.IntValue config;
         private final int min, max;
         private final Component label;
         private final java.util.function.BooleanSupplier isInvalid;
 
         public ValidatedIntSlider(int x, int y, int w, int h, Component label,
-                      net.minecraftforge.common.ForgeConfigSpec.IntValue config,
+                      net.neoforged.neoforge.common.ModConfigSpec.IntValue config,
                       int min, int max, Component tooltip,
                       java.util.function.BooleanSupplier isInvalid) {
             super(x, y, w, h, Component.empty(), (double)(config.get() - min) / (max - min));

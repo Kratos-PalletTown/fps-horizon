@@ -2,7 +2,7 @@ package pueblopaleta.mixin;
 
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
-import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
+import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(value = { SodiumWorldRenderer.class }, remap = false)

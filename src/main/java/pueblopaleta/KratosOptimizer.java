@@ -2,18 +2,18 @@ package pueblopaleta;
 
 import java.lang.reflect.Method;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.ModLoadingContext;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.fml.config.ModConfig;
 import net.minecraft.client.Minecraft;
 import java.util.concurrent.atomic.AtomicInteger;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.client.ConfigScreenHandler;
-import net.minecraftforge.fml.ModLoadingContext;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 
-@Mod("fps_horizon")
+@Mod("fpshorizon")
 public class KratosOptimizer
 {
     private static final AtomicInteger silentFrames = new AtomicInteger(0);
@@ -47,7 +47,7 @@ public class KratosOptimizer
         return silentFrames.get() > 0;
     }
 
-    public KratosOptimizer() {
+    public KratosOptimizer(ModContainer container, IEventBus modEventBus) {
         this.estado = Estado.IDLE;
         this.sampleIndex = 0;
         this.samplesCollected = 0;
@@ -58,24 +58,21 @@ public class KratosOptimizer
         this.fog = new KratosFog();
         KratosProfiles.load();
         final KratosCulling culling = new KratosCulling(this.fog);
-        MinecraftForge.EVENT_BUS.register(culling);
+        NeoForge.EVENT_BUS.register(culling);
         final KratosSimulation simulation = new KratosSimulation();
-        MinecraftForge.EVENT_BUS.register(simulation);
+        NeoForge.EVENT_BUS.register(simulation);
         final KratosChunkRetainer retainer = new KratosChunkRetainer();
-        MinecraftForge.EVENT_BUS.register(retainer);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, KratosConfig.SPEC);
-        ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class,
-            () -> new ConfigScreenHandler.ConfigScreenFactory((mc, parent) -> new KratosConfigScreen(parent)));
-        MinecraftForge.EVENT_BUS.register(this);
-        MinecraftForge.EVENT_BUS.register(this.fog);
+        NeoForge.EVENT_BUS.register(retainer);
+        container.registerConfig(ModConfig.Type.CLIENT, KratosConfig.SPEC);
+        container.registerExtensionPoint(IConfigScreenFactory.class,
+            (cont, parent) -> new KratosConfigScreen(parent));
+        NeoForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(this.fog);
         this.fpsSamples = new int[15];
     }
 
     @SubscribeEvent
-    public void onClientTick(final TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) {
-            return;
-        }
+    public void onClientTick(final ClientTickEvent.Post event) {
         final Minecraft mc = mcInstance = Minecraft.getInstance();
         if (mc.level == null || mc.player == null) {
             return;
@@ -206,7 +203,7 @@ public class KratosOptimizer
             return null;
         }
         try {
-            final Class<?> extClass = Class.forName("me.jellysquid.mods.sodium.client.world.WorldRendererExtended");
+            final Class<?> extClass = Class.forName("net.caffeinemc.mods.sodium.client.world.WorldRendererExtended");
             if (extClass.isInstance(mc.levelRenderer)) {
                 final Method getter = extClass.getMethod("sodium$getWorldRenderer");
                 return getter.invoke(mc.levelRenderer);

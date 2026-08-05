@@ -1,0 +1,13 @@
+{
+  "itemGroup.fpshorizon": "Example Mod Tab",
+  "block.fpshorizon.example_block": "Example Block",
+  "item.fpshorizon.example_item": "Example Item",
+
+  "fpshorizon.configuration.title": "Fps horizon Configs",
+  "fpshorizon.configuration.section.fpshorizon.common.toml": "Fps horizon Configs",
+  "fpshorizon.configuration.section.fpshorizon.common.toml.title": "Fps horizon Configs",
+  "fpshorizon.configuration.items": "Item List",
+  "fpshorizon.configuration.logDirtBlock": "Log Dirt Block",
+  "fpshorizon.configuration.magicNumberIntroduction": "Magic Number Text",
+  "fpshorizon.configuration.magicNumber": "Magic Number"
+}

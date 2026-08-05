@@ -328,21 +328,21 @@ public class KratosProfilesScreen extends Screen
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (mode == Mode.LIST || mode == Mode.DELETE_SELECT) {
             final int total = KratosProfiles.getProfiles().size();
             final int visibleRows = (this.height - 28 - 32 - LIST_TOP) / ROW_H;
             scrollOffset = (int) Math.max(0, Math.min(total - visibleRows,
-                scrollOffset - delta));
+                scrollOffset - scrollY));
             this.init();
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     @Override
     public void render(final GuiGraphics g, final int mx, final int my, final float delta) {
-        this.renderBackground(g);
+        this.renderBackground(g, mx, my, delta);
         g.drawCenteredString(this.font, this.title, this.width / 2, 10, 0xFFFFFF);
 
         switch (mode) {
@@ -407,7 +407,7 @@ public class KratosProfilesScreen extends Screen
 
         @Override
         public void render(GuiGraphics g, int mx, int my, float delta) {
-            this.renderBackground(g);
+            this.renderBackground(g, mx, my, delta);
             g.drawCenteredString(this.font,
                 Component.translatable("fps_horizon.profiles.confirm_delete"),
                 this.width / 2, this.height / 2 - 20, 0xFF4444);

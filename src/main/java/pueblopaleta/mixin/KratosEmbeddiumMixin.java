@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import pueblopaleta.KratosOptimizer;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.apache.logging.log4j.Logger;
-import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
+import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(value = { SodiumWorldRenderer.class }, remap = false)

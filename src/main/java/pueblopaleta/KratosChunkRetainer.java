@@ -4,8 +4,8 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.event.TickEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 /**
  * Delays chunk unloading when RD is increasing, so the player sees
@@ -59,10 +59,9 @@ public class KratosChunkRetainer
             flushFarChunks(mc);
             return false;
         }
-
         final int currentRD = mc.options.renderDistance().get();
+        final ChunkPos chunkPos = packet.pos();
         final ChunkPos playerChunk = mc.player.chunkPosition();
-        final ChunkPos chunkPos = new ChunkPos(packet.getX(), packet.getZ());
 
         // If chunk is within RD + LEEWAY, retain it
         final int dist = Math.max(
@@ -71,7 +70,7 @@ public class KratosChunkRetainer
         );
 
         if (dist <= currentRD + LEEWAY) {
-            retained.put(ChunkPos.asLong(packet.getX(), packet.getZ()), packet);
+            retained.put(chunkPos.toLong(), packet);
             return true; // suppress unload
         }
 
@@ -109,8 +108,7 @@ public class KratosChunkRetainer
      * Called every tick to flush chunks that are now too far away.
      */
     @SubscribeEvent
-    public void onClientTick(final TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
+    public void onClientTick(final ClientTickEvent.Post event) {
         final Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null) {
             retained.clear();

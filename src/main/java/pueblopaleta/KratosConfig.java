@@ -1,57 +1,57 @@
 package pueblopaleta;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class KratosConfig
 {
-    public static final ForgeConfigSpec.Builder BUILDER;
-    public static final ForgeConfigSpec SPEC;
+    public static final ModConfigSpec.Builder BUILDER;
+    public static final ModConfigSpec SPEC;
 
     // FPS
-    public static final ForgeConfigSpec.IntValue MIN_FPS;
-    public static final ForgeConfigSpec.IntValue MAX_FPS;
-    public static final ForgeConfigSpec.IntValue FPS_SAMPLES;
+    public static final ModConfigSpec.IntValue MIN_FPS;
+    public static final ModConfigSpec.IntValue MAX_FPS;
+    public static final ModConfigSpec.IntValue FPS_SAMPLES;
 
     // Render Distance
-    public static final ForgeConfigSpec.IntValue MIN_RD;
-    public static final ForgeConfigSpec.IntValue MAX_RD;
+    public static final ModConfigSpec.IntValue MIN_RD;
+    public static final ModConfigSpec.IntValue MAX_RD;
 
     // Cooldown RD
-    public static final ForgeConfigSpec.IntValue COOLDOWN_BAJAR;
-    public static final ForgeConfigSpec.IntValue COOLDOWN_SUBIR;
+    public static final ModConfigSpec.IntValue COOLDOWN_BAJAR;
+    public static final ModConfigSpec.IntValue COOLDOWN_SUBIR;
 
     // Fog
-    public static final ForgeConfigSpec.BooleanValue NIEBLA_ACTIVA;
-    public static final ForgeConfigSpec.IntValue FOG_START_BLOQUES;
-    public static final ForgeConfigSpec.DoubleValue FOG_END;
-    public static final ForgeConfigSpec.DoubleValue FOG_CIERRE_END;
-    public static final ForgeConfigSpec.DoubleValue FOG_VELOCIDAD_LERP;
+    public static final ModConfigSpec.BooleanValue NIEBLA_ACTIVA;
+    public static final ModConfigSpec.IntValue FOG_START_BLOQUES;
+    public static final ModConfigSpec.DoubleValue FOG_END;
+    public static final ModConfigSpec.DoubleValue FOG_CIERRE_END;
+    public static final ModConfigSpec.DoubleValue FOG_VELOCIDAD_LERP;
 
     // Culling
-    public static final ForgeConfigSpec.BooleanValue CULLING_ACTIVO;
-    public static final ForgeConfigSpec.BooleanValue CULLING_ENTIDADES;
-    public static final ForgeConfigSpec.DoubleValue CULLING_RADIUS_FACTOR;
-    public static final ForgeConfigSpec.IntValue CULLING_EXTRA_BLOCKS;
+    public static final ModConfigSpec.BooleanValue CULLING_ACTIVO;
+    public static final ModConfigSpec.BooleanValue CULLING_ENTIDADES;
+    public static final ModConfigSpec.DoubleValue CULLING_RADIUS_FACTOR;
+    public static final ModConfigSpec.IntValue CULLING_EXTRA_BLOCKS;
 
     // Simulation Distance
-    public static final ForgeConfigSpec.EnumValue<SdMode> SD_MODE;
-    public static final ForgeConfigSpec.IntValue MIN_SD;
-    public static final ForgeConfigSpec.IntValue MAX_SD;
-    public static final ForgeConfigSpec.IntValue SD_COOLDOWN_BAJAR;
-    public static final ForgeConfigSpec.IntValue SD_COOLDOWN_SUBIR;
-    public static final ForgeConfigSpec.IntValue SD_MIN_FPS;
-    public static final ForgeConfigSpec.IntValue SD_MAX_FPS;
-    public static final ForgeConfigSpec.IntValue SD_MAX_MS;
-    public static final ForgeConfigSpec.IntValue SD_MIN_MS;
+    public static final ModConfigSpec.EnumValue<SdMode> SD_MODE;
+    public static final ModConfigSpec.IntValue MIN_SD;
+    public static final ModConfigSpec.IntValue MAX_SD;
+    public static final ModConfigSpec.IntValue SD_COOLDOWN_BAJAR;
+    public static final ModConfigSpec.IntValue SD_COOLDOWN_SUBIR;
+    public static final ModConfigSpec.IntValue SD_MIN_FPS;
+    public static final ModConfigSpec.IntValue SD_MAX_FPS;
+    public static final ModConfigSpec.IntValue SD_MAX_MS;
+    public static final ModConfigSpec.IntValue SD_MIN_MS;
 
     // Debug
-    public static final ForgeConfigSpec.BooleanValue MOSTRAR_DEBUG;
-    public static final ForgeConfigSpec.BooleanValue DEBUG_VERBOSE;
+    public static final ModConfigSpec.BooleanValue MOSTRAR_DEBUG;
+    public static final ModConfigSpec.BooleanValue DEBUG_VERBOSE;
 
     public enum SdMode { OFF, FPS, MS, BOTH }
 
     static {
-        BUILDER = new ForgeConfigSpec.Builder();
+        BUILDER = new ModConfigSpec.Builder();
 
         BUILDER.push("1_fps");
         MIN_FPS = BUILDER.defineInRange("minFps", 30, 10, 120);

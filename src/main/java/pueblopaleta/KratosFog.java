@@ -1,10 +1,10 @@
 package pueblopaleta;
 
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.bus.api.SubscribeEvent;
 import com.mojang.blaze3d.shaders.FogShape;
 import net.minecraft.world.level.material.FogType;
-import net.minecraftforge.client.event.ViewportEvent;
+import net.neoforged.neoforge.client.event.ViewportEvent;
 import net.minecraft.client.Minecraft;
 
 public class KratosFog

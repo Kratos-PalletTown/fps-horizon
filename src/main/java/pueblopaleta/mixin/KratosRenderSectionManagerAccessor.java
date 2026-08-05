@@ -1,6 +1,6 @@
 package pueblopaleta.mixin;
 
-import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
+import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
