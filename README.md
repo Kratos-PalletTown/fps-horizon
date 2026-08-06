@@ -5,8 +5,9 @@
 <h1 align="center">FPS Horizon</h1>
 
 <p align="center">
-  <img alt="Loader" src="https://img.shields.io/badge/Loader-Forge-orange">
-  <img alt="Embeddium" src="https://img.shields.io/badge/Requires-Embeddium-blue">
+  <img alt="Minecraft" src="https://img.shields.io/badge/Minecraft-1.21.1-brightgreen">
+  <img alt="Loader" src="https://img.shields.io/badge/Loader-NeoForge-orange">
+  <img alt="Sodium" src="https://img.shields.io/badge/Requires-Sodium-blue">
   <img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-yellow">
 </p>
 
@@ -14,7 +15,7 @@
 
 ## 🇬🇧 English
 
-**FPS Horizon** is a client-side Forge mod that dynamically adjusts render distance and simulation distance based on your average FPS and server tick time, keeping the game smooth without any manual tweaking.
+**FPS Horizon** is a client-side NeoForge mod for Minecraft 1.21.1 that dynamically adjusts render distance and simulation distance based on your average FPS and server tick time, keeping the game smooth without any manual tweaking.
 
 ### ✨ Features
 
@@ -24,15 +25,16 @@
 - **Distance culling** — reduces GPU load by culling chunks and entities outside an ellipsoid shape
 - **Culling profiles** *(experimental)* — create custom culling configurations per render distance
 - **Real-time configuration** — all settings changeable in-game from the Mods menu, no restart needed
-- **Embeddium compatible** — fully integrated with Embeddium's rendering pipeline via Mixins
+- **Sodium compatible** — fully integrated with Sodium's rendering pipeline via Mixins
 - **Client-side only** — works on any server
 
 ### 📋 Requirements
 
 | Dependency | Version |
 |---|---|
-| Forge | See releases |
-| Embeddium | 0.3.31+ |
+| Minecraft | 1.21.1 |
+| NeoForge | See releases |
+| Sodium | 0.6.0+ |
 
 ### ⚙️ Configuration
 
@@ -92,12 +94,14 @@ All options available in-game via **Mods → FPS Horizon → Config**.
 
 ### 🚀 Installation
 
-1. Install [Minecraft Forge](https://files.minecraftforge.net/) for your version
-2. Install [Embeddium 0.3.31+](https://modrinth.com/mod/embeddium)
+1. Install [NeoForge](https://neoforged.net/) for Minecraft 1.21.1
+2. Install [Sodium 0.6.0+](https://modrinth.com/mod/sodium)
 3. Drop `fps-horizon-X.X.X.jar` into your `mods/` folder
 4. Launch and configure via **Mods → FPS Horizon → Config**
 
 ### 📋 Changelog
+> ℹ️ Version history below carries over from the original 1.20.1 Forge mod, which was ported to NeoForge 1.21.1.
+
 v1.3.0 (Stable)
 - Completely rewritten culling system — replaced the complex ellipsoid + hysteresis with a simple, proven formula (fixed margins + auto - vertical scale).
 - Full synchronization with Embeddium — the mod now updates the internal RenderSectionManager and calls markGraphDirty() whenever render distance changes.
@@ -138,7 +142,7 @@ v1.3.0 (Stable)
 
 ## 🇦🇷 Español
 
-**FPS Horizon** es un mod cliente de Forge que ajusta automáticamente la distancia de renderizado y la distancia de simulación según el promedio de FPS y el tiempo de tick del servidor, manteniendo el juego fluido sin configuración manual.
+**FPS Horizon** es un mod cliente de NeoForge para Minecraft 1.21.1 que ajusta automáticamente la distancia de renderizado y la distancia de simulación según el promedio de FPS y el tiempo de tick del servidor, manteniendo el juego fluido sin configuración manual.
 
 ### ✨ Características
 
@@ -148,15 +152,16 @@ v1.3.0 (Stable)
 - **Culling de distancia** — reduce la carga de GPU descartando chunks y entidades fuera de un elipsoide
 - **Perfiles de culling** *(experimental)* — configuraciones personalizadas de culling por distancia de renderizado
 - **Configuración en tiempo real** — todo cambiable en el juego desde el menú de Mods, sin reiniciar
-- **Compatible con Embeddium** — integrado con el pipeline de renderizado de Embeddium vía Mixins
+- **Compatible con Sodium** — integrado con el pipeline de renderizado de Sodium vía Mixins
 - **Solo cliente** — funciona en cualquier servidor
 
 ### 📋 Requisitos
 
 | Dependencia | Versión |
 |---|---|
-| Forge | Ver releases |
-| Embeddium | 0.3.31+ |
+| Minecraft | 1.21.1 |
+| NeoForge | Ver releases |
+| Sodium | 0.6.0+ |
 
 ### ⚙️ Configuración
 
@@ -216,12 +221,14 @@ Todas las opciones disponibles en **Mods → FPS Horizon → Config**.
 
 ### 🚀 Instalación
 
-1. Instalá [Minecraft Forge](https://files.minecraftforge.net/) para tu versión
-2. Instalá [Embeddium 0.3.31+](https://modrinth.com/mod/embeddium)
+1. Instalá [NeoForge](https://neoforged.net/) para Minecraft 1.21.1
+2. Instalá [Sodium 0.6.0+](https://modrinth.com/mod/sodium)
 3. Copiá `fps-horizon-X.X.X.jar` en tu carpeta `mods/`
 4. Iniciá el juego y configurá desde **Mods → FPS Horizon → Config**
 
 ### 📋 Changelog
+> ℹ️ El historial de versiones a continuación proviene del mod original para 1.20.1 Forge, que fue portado a NeoForge 1.21.1.
+
 v1.3.0 (Estable)
 - Sistema de culling completamente reescrito — reemplazado el complejo elipsoide + histéresis por una fórmula simple y probada (márgenes fijos + autoescala vertical).
 - Sincronización total con Embeddium — el mod ahora actualiza el RenderSectionManager y llama a markGraphDirty() cada vez que cambia la distancia de renderizado.
