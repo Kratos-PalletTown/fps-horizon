@@ -1,14 +1,17 @@
 package pueblopaleta;
 
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.shaders.FogShape;
-import net.minecraft.world.level.material.FogType;
-import net.minecraftforge.client.event.ViewportEvent;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.level.material.FogType;
 
 public class KratosFog
 {
+    private static KratosFog instance;
+
+    public static KratosFog getInstance() { return instance; }
+
     private EstadoFog estado;
 
     // Valores actuales interpolados (hilo de render los lee)
@@ -32,6 +35,7 @@ public class KratosFog
         this.fogStartTarget = -1.0f;
         this.onFogCerrado   = null;
         this.inicializado   = false;
+        instance = this;
     }
 
     private float calcFogEnd(final int rd) {
@@ -126,10 +130,16 @@ public class KratosFog
         }
     }
 
-    @SubscribeEvent(priority = EventPriority.HIGH)
-    public void onRenderFog(final ViewportEvent.RenderFog event) {
+    /**
+     * Called from KratosFogMixin at the tail of FogRenderer#setupFog.
+     * On NeoForge this logic lived in a ViewportEvent.RenderFog listener
+     * (cancelling the event to fully replace vanilla's fog). Fabric has no
+     * equivalent event, so the mixin runs this AFTER vanilla computed its
+     * own fog and we simply overwrite the shader uniforms with our values.
+     */
+    public void applyFog(final Camera camera) {
         if (!(boolean) KratosConfig.NIEBLA_ACTIVA.get()) return;
-        if (event.getCamera().getFluidInCamera() != FogType.NONE) return;
+        if (camera.getFluidInCamera() != FogType.NONE) return;
 
         final Minecraft mc = KratosOptimizer.getMC();
         if (mc == null || mc.level == null) return;
@@ -145,10 +155,9 @@ public class KratosFog
         if (nearPlane < 0.0f) nearPlane = 0.0f;
         if (nearPlane >= farPlane) nearPlane = farPlane - 0.5f;
 
-        event.setNearPlaneDistance(nearPlane);
-        event.setFarPlaneDistance(farPlane);
-        event.setFogShape(FogShape.SPHERE);
-        event.setCanceled(true);
+        RenderSystem.setShaderFogStart(nearPlane);
+        RenderSystem.setShaderFogEnd(farPlane);
+        RenderSystem.setShaderFogShape(FogShape.SPHERE);
     }
 
     private static float lerp(final float a, final float b, final float t) {

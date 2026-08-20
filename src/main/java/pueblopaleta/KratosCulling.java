@@ -2,8 +2,6 @@ package pueblopaleta;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.event.TickEvent;
 
 public class KratosCulling
 {
@@ -23,9 +21,7 @@ public class KratosCulling
         this.fog = fog;
     }
 
-    @SubscribeEvent
-    public void onClientTick(final TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
+    public void tick() {
 
         final Minecraft mc = KratosOptimizer.getMC();
         if (mc == null || mc.level == null || mc.player == null) {

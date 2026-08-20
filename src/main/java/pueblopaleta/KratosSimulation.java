@@ -1,9 +1,6 @@
 package pueblopaleta;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.server.IntegratedServer;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.event.TickEvent;
 
 public class KratosSimulation
 {
@@ -21,13 +18,11 @@ public class KratosSimulation
 
     public KratosSimulation() {
         this.fpsSamples = new int[15];
-        this.msSamples  = new long[Math.max(5, (int) KratosConfig.FPS_SAMPLES.get())];
+        this.msSamples  = new long[15];
         this.cooldownRestante = 0;
     }
 
-    @SubscribeEvent
-    public void onClientTick(final TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
+    public void tick() {
 
         final Minecraft mc = KratosOptimizer.getMC();
         if (mc == null || mc.level == null || mc.player == null) return;
@@ -51,6 +46,9 @@ public class KratosSimulation
             fpsSamples = new int[configSamples];
             sampleIndex = 0;
             samplesCollected = 0;
+            msSamples = new long[configSamples];
+            msIndex = 0;
+            msCollected = 0;
         }
         fpsSamples[sampleIndex] = mc.getFps();
         sampleIndex = (sampleIndex + 1) % fpsSamples.length;

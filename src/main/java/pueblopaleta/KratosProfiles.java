@@ -3,8 +3,7 @@ package pueblopaleta;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import net.minecraft.client.Minecraft;
-import net.minecraftforge.fml.loading.FMLPaths;
+import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -79,9 +78,8 @@ public class KratosProfiles
             if (type == ProfileType.EXACT) {
                 conflicts = p.matches(rdExact);
             } else {
-                // Rango conflicta si se solapa con otro perfil
                 conflicts = p.matches(rdMin) || p.matches(rdMax)
-                        || (type == ProfileType.RANGE && rdMin <= getRDMax(p) && rdMax >= getRDMin(p));
+                        || (rdMin <= getRDMax(p) && rdMax >= getRDMin(p));
             }
             if (conflicts) return p;
         }
@@ -121,6 +119,8 @@ public class KratosProfiles
     }
 
     private static Path getPath() {
-        return FMLPaths.CONFIGDIR.get().resolve(FILE_NAME);
+        // Was FMLPaths.CONFIGDIR.get() on NeoForge; Fabric Loader exposes
+        // the same directory ("<instance>/config/") through FabricLoader.
+        return FabricLoader.getInstance().getConfigDir().resolve(FILE_NAME);
     }
 }

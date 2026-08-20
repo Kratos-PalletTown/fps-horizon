@@ -1,106 +1,210 @@
 package pueblopaleta;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import net.fabricmc.loader.api.FabricLoader;
 
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.file.Path;
+
+/**
+ * Fabric replacement for NeoForge's ModConfigSpec.
+ *
+ * ModConfigSpec.IntValue / DoubleValue / BooleanValue / EnumValue all exposed
+ * a plain get()/set() API, so the tick logic (KratosOptimizer, KratosCulling,
+ * KratosFog, KratosSimulation, KratosDebug) barely had to change during the
+ * port - it still calls KratosConfig.MIN_FPS.get() etc. The Cloth Config
+ * screen (KratosModMenuIntegration) reads/writes these same ConfigValue
+ * instances directly.
+ *
+ * Persistence is a plain JSON file at config/fpshorizon.json instead of the
+ * NeoForge .toml, saved through Fabric Loader's config directory.
+ */
 public class KratosConfig
 {
-    public static final ForgeConfigSpec.Builder BUILDER;
-    public static final ForgeConfigSpec SPEC;
+    public static class ConfigValue<T>
+    {
+        private final T defaultValue;
+        private T value;
 
-    // FPS
-    public static final ForgeConfigSpec.IntValue MIN_FPS;
-    public static final ForgeConfigSpec.IntValue MAX_FPS;
-    public static final ForgeConfigSpec.IntValue FPS_SAMPLES;
+        public ConfigValue(T defaultValue) {
+            this.defaultValue = defaultValue;
+            this.value = defaultValue;
+        }
 
-    // Render Distance
-    public static final ForgeConfigSpec.IntValue MIN_RD;
-    public static final ForgeConfigSpec.IntValue MAX_RD;
+        public T get() { return value; }
 
-    // Cooldown RD
-    public static final ForgeConfigSpec.IntValue COOLDOWN_BAJAR;
-    public static final ForgeConfigSpec.IntValue COOLDOWN_SUBIR;
+        public void set(T newValue) {
+            this.value = newValue;
+        }
 
-    // Fog
-    public static final ForgeConfigSpec.BooleanValue NIEBLA_ACTIVA;
-    public static final ForgeConfigSpec.IntValue FOG_START_BLOQUES;
-    public static final ForgeConfigSpec.DoubleValue FOG_END;
-    public static final ForgeConfigSpec.DoubleValue FOG_CIERRE_END;
-    public static final ForgeConfigSpec.DoubleValue FOG_VELOCIDAD_LERP;
-
-    // Culling
-    public static final ForgeConfigSpec.BooleanValue CULLING_ACTIVO;
-    public static final ForgeConfigSpec.BooleanValue CULLING_ENTIDADES;
-    public static final ForgeConfigSpec.DoubleValue CULLING_RADIUS_FACTOR;
-    public static final ForgeConfigSpec.IntValue CULLING_EXTRA_BLOCKS;
-
-    // Simulation Distance
-    public static final ForgeConfigSpec.EnumValue<SdMode> SD_MODE;
-    public static final ForgeConfigSpec.IntValue MIN_SD;
-    public static final ForgeConfigSpec.IntValue MAX_SD;
-    public static final ForgeConfigSpec.IntValue SD_COOLDOWN_BAJAR;
-    public static final ForgeConfigSpec.IntValue SD_COOLDOWN_SUBIR;
-    public static final ForgeConfigSpec.IntValue SD_MIN_FPS;
-    public static final ForgeConfigSpec.IntValue SD_MAX_FPS;
-    public static final ForgeConfigSpec.IntValue SD_MAX_MS;
-    public static final ForgeConfigSpec.IntValue SD_MIN_MS;
-
-    // Debug
-    public static final ForgeConfigSpec.BooleanValue MOSTRAR_DEBUG;
-    public static final ForgeConfigSpec.BooleanValue DEBUG_VERBOSE;
+        public T getDefault() { return defaultValue; }
+    }
 
     public enum SdMode { OFF, FPS, MS, BOTH }
 
-    static {
-        BUILDER = new ForgeConfigSpec.Builder();
+    // FPS
+    public static final ConfigValue<Integer> MIN_FPS      = new ConfigValue<>(30);
+    public static final ConfigValue<Integer> MAX_FPS      = new ConfigValue<>(50);
+    public static final ConfigValue<Integer> FPS_SAMPLES  = new ConfigValue<>(15);
 
-        BUILDER.push("1_fps");
-        MIN_FPS = BUILDER.defineInRange("minFps", 30, 10, 120);
-        MAX_FPS = BUILDER.defineInRange("maxFps", 50, 10, 120);
-        FPS_SAMPLES = BUILDER.defineInRange("fpsSamples", 15, 5, 60);
-        BUILDER.pop();
+    // Render Distance
+    public static final ConfigValue<Integer> MIN_RD = new ConfigValue<>(4);
+    public static final ConfigValue<Integer> MAX_RD = new ConfigValue<>(12);
 
-        BUILDER.push("2_render_distance");
-        MIN_RD = BUILDER.defineInRange("minRenderDistance", 4, 2, 32);
-        MAX_RD = BUILDER.defineInRange("maxRenderDistance", 12, 2, 32);
-        BUILDER.pop();
+    // Cooldown RD
+    public static final ConfigValue<Integer> COOLDOWN_BAJAR = new ConfigValue<>(30);
+    public static final ConfigValue<Integer> COOLDOWN_SUBIR = new ConfigValue<>(100);
 
-        BUILDER.push("3_cooldown");
-        COOLDOWN_BAJAR = BUILDER.defineInRange("cooldownBajar", 30, 5, 400);
-        COOLDOWN_SUBIR = BUILDER.defineInRange("cooldownSubir", 100, 5, 400);
-        BUILDER.pop();
+    // Fog
+    public static final ConfigValue<Boolean> NIEBLA_ACTIVA        = new ConfigValue<>(true);
+    public static final ConfigValue<Integer> FOG_START_BLOQUES    = new ConfigValue<>(0);
+    public static final ConfigValue<Double>  FOG_END              = new ConfigValue<>(0.95);
+    public static final ConfigValue<Double>  FOG_CIERRE_END       = new ConfigValue<>(0.8);
+    public static final ConfigValue<Double>  FOG_VELOCIDAD_LERP   = new ConfigValue<>(0.05);
 
-        BUILDER.push("4_niebla");
-        NIEBLA_ACTIVA = BUILDER.define("nieblaActiva", true);
-        FOG_START_BLOQUES = BUILDER.defineInRange("fogStartBloques", 0, 0, 512);
-        FOG_END = BUILDER.defineInRange("fogEnd", 0.95, 0.5, 1.0);
-        FOG_CIERRE_END = BUILDER.defineInRange("fogCierreEnd", 0.8, 0.3, 1.0);
-        FOG_VELOCIDAD_LERP = BUILDER.defineInRange("fogVelocidadLerp", 0.05, 0.01, 0.5);
-        BUILDER.pop();
+    // Culling
+    public static final ConfigValue<Boolean> CULLING_ACTIVO         = new ConfigValue<>(true);
+    public static final ConfigValue<Boolean> CULLING_ENTIDADES      = new ConfigValue<>(true);
+    public static final ConfigValue<Double>  CULLING_RADIUS_FACTOR  = new ConfigValue<>(1.125);
+    public static final ConfigValue<Integer> CULLING_EXTRA_BLOCKS   = new ConfigValue<>(0);
 
-        BUILDER.push("5_culling");
-        CULLING_ACTIVO = BUILDER.define("cullingActivo", true);
-        CULLING_ENTIDADES = BUILDER.define("cullingEntidades", true);
-        CULLING_RADIUS_FACTOR = BUILDER.defineInRange("cullingRadiusFactor", 1.125, 0.8, 1.5);
-        CULLING_EXTRA_BLOCKS = BUILDER.defineInRange("cullingExtraBlocks", 0, 0, 64);
-        BUILDER.pop();
+    // Simulation Distance
+    public static final ConfigValue<SdMode>  SD_MODE           = new ConfigValue<>(SdMode.OFF);
+    public static final ConfigValue<Integer> MIN_SD            = new ConfigValue<>(5);
+    public static final ConfigValue<Integer> MAX_SD            = new ConfigValue<>(10);
+    public static final ConfigValue<Integer> SD_COOLDOWN_BAJAR = new ConfigValue<>(30);
+    public static final ConfigValue<Integer> SD_COOLDOWN_SUBIR = new ConfigValue<>(100);
+    public static final ConfigValue<Integer> SD_MIN_FPS        = new ConfigValue<>(30);
+    public static final ConfigValue<Integer> SD_MAX_FPS        = new ConfigValue<>(50);
+    public static final ConfigValue<Integer> SD_MAX_MS         = new ConfigValue<>(100);
+    public static final ConfigValue<Integer> SD_MIN_MS         = new ConfigValue<>(50);
 
-        BUILDER.push("6_simulation_distance");
-        SD_MODE = BUILDER.defineEnum("sdMode", SdMode.OFF);
-        MIN_SD = BUILDER.defineInRange("minSimDistance", 5, 5, 32);
-        MAX_SD = BUILDER.defineInRange("maxSimDistance", 10, 2, 32);
-        SD_COOLDOWN_BAJAR = BUILDER.defineInRange("sdCooldownBajar", 30, 5, 400);
-        SD_COOLDOWN_SUBIR = BUILDER.defineInRange("sdCooldownSubir", 100, 5, 400);
-        SD_MIN_FPS = BUILDER.defineInRange("sdMinFps", 30, 10, 120);
-        SD_MAX_FPS = BUILDER.defineInRange("sdMaxFps", 50, 10, 120);
-        SD_MAX_MS = BUILDER.defineInRange("sdMaxMs", 100, 10, 500);
-        SD_MIN_MS = BUILDER.defineInRange("sdMinMs", 50, 5, 500);
-        BUILDER.pop();
+    // Debug
+    public static final ConfigValue<Boolean> MOSTRAR_DEBUG = new ConfigValue<>(false);
+    public static final ConfigValue<Boolean> DEBUG_VERBOSE = new ConfigValue<>(false);
 
-        BUILDER.push("7_debug");
-        MOSTRAR_DEBUG = BUILDER.define("mostrarDebug", false);
-        DEBUG_VERBOSE = BUILDER.define("debugVerbose", false);
-        BUILDER.pop();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final String FILE_NAME = "fpshorizon.json";
 
-        SPEC = BUILDER.build();
+    /** Plain POJO mirror of the values above, used only for GSON (de)serialization. */
+    private static class Data {
+        int minFps = MIN_FPS.getDefault();
+        int maxFps = MAX_FPS.getDefault();
+        int fpsSamples = FPS_SAMPLES.getDefault();
+        int minRenderDistance = MIN_RD.getDefault();
+        int maxRenderDistance = MAX_RD.getDefault();
+        int cooldownBajar = COOLDOWN_BAJAR.getDefault();
+        int cooldownSubir = COOLDOWN_SUBIR.getDefault();
+        boolean nieblaActiva = NIEBLA_ACTIVA.getDefault();
+        int fogStartBloques = FOG_START_BLOQUES.getDefault();
+        double fogEnd = FOG_END.getDefault();
+        double fogCierreEnd = FOG_CIERRE_END.getDefault();
+        double fogVelocidadLerp = FOG_VELOCIDAD_LERP.getDefault();
+        boolean cullingActivo = CULLING_ACTIVO.getDefault();
+        boolean cullingEntidades = CULLING_ENTIDADES.getDefault();
+        double cullingRadiusFactor = CULLING_RADIUS_FACTOR.getDefault();
+        int cullingExtraBlocks = CULLING_EXTRA_BLOCKS.getDefault();
+        String sdMode = SD_MODE.getDefault().name();
+        int minSimDistance = MIN_SD.getDefault();
+        int maxSimDistance = MAX_SD.getDefault();
+        int sdCooldownBajar = SD_COOLDOWN_BAJAR.getDefault();
+        int sdCooldownSubir = SD_COOLDOWN_SUBIR.getDefault();
+        int sdMinFps = SD_MIN_FPS.getDefault();
+        int sdMaxFps = SD_MAX_FPS.getDefault();
+        int sdMaxMs = SD_MAX_MS.getDefault();
+        int sdMinMs = SD_MIN_MS.getDefault();
+        boolean mostrarDebug = MOSTRAR_DEBUG.getDefault();
+        boolean debugVerbose = DEBUG_VERBOSE.getDefault();
+    }
+
+    private static Path getPath() {
+        return FabricLoader.getInstance().getConfigDir().resolve(FILE_NAME);
+    }
+
+    public static void load() {
+        final Path path = getPath();
+        if (!path.toFile().exists()) {
+            save();
+            return;
+        }
+        try (Reader r = new FileReader(path.toFile())) {
+            final Data d = GSON.fromJson(r, Data.class);
+            if (d == null) return;
+
+            MIN_FPS.set(d.minFps);
+            MAX_FPS.set(d.maxFps);
+            FPS_SAMPLES.set(d.fpsSamples);
+            MIN_RD.set(d.minRenderDistance);
+            MAX_RD.set(d.maxRenderDistance);
+            COOLDOWN_BAJAR.set(d.cooldownBajar);
+            COOLDOWN_SUBIR.set(d.cooldownSubir);
+            NIEBLA_ACTIVA.set(d.nieblaActiva);
+            FOG_START_BLOQUES.set(d.fogStartBloques);
+            FOG_END.set(d.fogEnd);
+            FOG_CIERRE_END.set(d.fogCierreEnd);
+            FOG_VELOCIDAD_LERP.set(d.fogVelocidadLerp);
+            CULLING_ACTIVO.set(d.cullingActivo);
+            CULLING_ENTIDADES.set(d.cullingEntidades);
+            CULLING_RADIUS_FACTOR.set(d.cullingRadiusFactor);
+            CULLING_EXTRA_BLOCKS.set(d.cullingExtraBlocks);
+            try {
+                SD_MODE.set(SdMode.valueOf(d.sdMode));
+            } catch (final Exception ignored) {
+                SD_MODE.set(SdMode.OFF);
+            }
+            MIN_SD.set(d.minSimDistance);
+            MAX_SD.set(d.maxSimDistance);
+            SD_COOLDOWN_BAJAR.set(d.sdCooldownBajar);
+            SD_COOLDOWN_SUBIR.set(d.sdCooldownSubir);
+            SD_MIN_FPS.set(d.sdMinFps);
+            SD_MAX_FPS.set(d.sdMaxFps);
+            SD_MAX_MS.set(d.sdMaxMs);
+            SD_MIN_MS.set(d.sdMinMs);
+            MOSTRAR_DEBUG.set(d.mostrarDebug);
+            DEBUG_VERBOSE.set(d.debugVerbose);
+        } catch (final Exception e) {
+            // Corrupt or unreadable config - keep current in-memory defaults.
+        }
+    }
+
+    public static void save() {
+        final Data d = new Data();
+        d.minFps = MIN_FPS.get();
+        d.maxFps = MAX_FPS.get();
+        d.fpsSamples = FPS_SAMPLES.get();
+        d.minRenderDistance = MIN_RD.get();
+        d.maxRenderDistance = MAX_RD.get();
+        d.cooldownBajar = COOLDOWN_BAJAR.get();
+        d.cooldownSubir = COOLDOWN_SUBIR.get();
+        d.nieblaActiva = NIEBLA_ACTIVA.get();
+        d.fogStartBloques = FOG_START_BLOQUES.get();
+        d.fogEnd = FOG_END.get();
+        d.fogCierreEnd = FOG_CIERRE_END.get();
+        d.fogVelocidadLerp = FOG_VELOCIDAD_LERP.get();
+        d.cullingActivo = CULLING_ACTIVO.get();
+        d.cullingEntidades = CULLING_ENTIDADES.get();
+        d.cullingRadiusFactor = CULLING_RADIUS_FACTOR.get();
+        d.cullingExtraBlocks = CULLING_EXTRA_BLOCKS.get();
+        d.sdMode = SD_MODE.get().name();
+        d.minSimDistance = MIN_SD.get();
+        d.maxSimDistance = MAX_SD.get();
+        d.sdCooldownBajar = SD_COOLDOWN_BAJAR.get();
+        d.sdCooldownSubir = SD_COOLDOWN_SUBIR.get();
+        d.sdMinFps = SD_MIN_FPS.get();
+        d.sdMaxFps = SD_MAX_FPS.get();
+        d.sdMaxMs = SD_MAX_MS.get();
+        d.sdMinMs = SD_MIN_MS.get();
+        d.mostrarDebug = MOSTRAR_DEBUG.get();
+        d.debugVerbose = DEBUG_VERBOSE.get();
+
+        try (Writer w = new FileWriter(getPath().toFile())) {
+            GSON.toJson(d, w);
+        } catch (final Exception e) {
+            e.printStackTrace();
+        }
     }
 }

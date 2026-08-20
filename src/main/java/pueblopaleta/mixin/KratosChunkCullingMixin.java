@@ -3,7 +3,7 @@ package pueblopaleta.mixin;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.chunk.ChunkRenderDispatcher;
+import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
 import net.minecraft.core.BlockPos;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,22 +17,22 @@ import pueblopaleta.KratosCulling;
 public class KratosChunkCullingMixin
 {
     @Shadow @Final private Minecraft minecraft;
-    private ChunkRenderDispatcher.RenderChunk kratos$current = null;
+    private SectionRenderDispatcher.RenderSection kratos$current = null;
 
     @Redirect(method = "renderChunkLayer",
               at = @At(value = "INVOKE",
-                       target = "Lnet/minecraft/client/renderer/chunk/ChunkRenderDispatcher$RenderChunk;getCompiledChunk()Lnet/minecraft/client/renderer/chunk/ChunkRenderDispatcher$CompiledChunk;"),
+                       target = "Lnet/minecraft/client/renderer/chunk/SectionRenderDispatcher$RenderSection;getCompiledSection()Lnet/minecraft/client/renderer/chunk/SectionRenderDispatcher$CompiledSection;"),
               require = 0)
-    public ChunkRenderDispatcher.CompiledChunk kratos$trackChunk(final ChunkRenderDispatcher.RenderChunk chunk) {
+    public SectionRenderDispatcher.CompiledSection kratos$trackChunk(final SectionRenderDispatcher.RenderSection chunk) {
         kratos$current = chunk;
-        return chunk.getCompiledChunk();
+        return chunk.getCompiled();
     }
 
     @Redirect(method = "renderChunkLayer",
               at = @At(value = "INVOKE",
-                       target = "Lnet/minecraft/client/renderer/chunk/ChunkRenderDispatcher$CompiledChunk;isEmpty(Lnet/minecraft/client/renderer/RenderType;)Z"),
+                       target = "Lnet/minecraft/client/renderer/chunk/SectionRenderDispatcher$CompiledSection;isEmpty(Lnet/minecraft/client/renderer/RenderType;)Z"),
               require = 0)
-    public boolean kratos$cullChunk(final ChunkRenderDispatcher.CompiledChunk compiled, final RenderType type) {
+    public boolean kratos$cullChunk(final SectionRenderDispatcher.CompiledSection compiled, final RenderType type) {
         if (compiled.isEmpty(type)) return true;
         if (!(boolean) KratosConfig.CULLING_ACTIVO.get()) return false;
         if (minecraft.cameraEntity == null || kratos$current == null) return false;
