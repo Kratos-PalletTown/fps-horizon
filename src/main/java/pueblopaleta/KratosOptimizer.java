@@ -81,7 +81,11 @@ public class KratosOptimizer
                     // fog callback transitions to SILENT_ARMADO
                     break;
                 case SILENT_ARMADO:
-                    silentFrames.set(20);
+                    // FIXED: Longer silent frames when RD is increasing to avoid world reload
+                    // When increasing RD, Sodium needs more time to build new chunks
+                    // When decreasing, fewer frames are needed since chunks are already loaded
+                    final int silentFramesToSet = rdGoingUp ? 40 : 20;
+                    silentFrames.set(silentFramesToSet);
                     this.estado = Estado.APLICANDO_RD;
                     break;
                 case APLICANDO_RD:
