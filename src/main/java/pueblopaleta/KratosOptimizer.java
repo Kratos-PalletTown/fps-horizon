@@ -82,9 +82,10 @@ public class KratosOptimizer
                     break;
                 case SILENT_ARMADO:
                     // FIXED: Longer silent frames when RD is increasing to avoid world reload
-                    // When increasing RD, Sodium needs more time to build new chunks
+                    // When increasing RD, Sodium needs significantly more time to build new chunks
+                    // in Fabric 1.21.1 — 80 frames (~4 seconds) gives it enough time.
                     // When decreasing, fewer frames are needed since chunks are already loaded
-                    final int silentFramesToSet = rdGoingUp ? 40 : 20;
+                    final int silentFramesToSet = rdGoingUp ? 80 : 20;
                     silentFrames.set(silentFramesToSet);
                     this.estado = Estado.APLICANDO_RD;
                     break;
