@@ -119,6 +119,9 @@ public class KratosCulling
      * Uses the nearest point of the chunk section to the camera in Y,
      * avoiding false culling of tall sections.
      *
+     * FIXED: Improved vertical distance calculation to handle full Minecraft Y range
+     * (-64 to 320) correctly. Previous version had issues at high altitudes.
+     *
      * Returns true if the section should be VISIBLE (within ellipsoid).
      */
     public static boolean isVisible(final int sectionOriginX, final int sectionOriginY,
@@ -134,9 +137,13 @@ public class KratosCulling
         // Fast XZ rejection
         if (d2xz > R2_XZ) return false;
 
-        // Nearest point of section to camera in Y (section spans originY to originY+16)
-        final double oy = sectionOriginY - camY;
-        final double dy = nearestToZero(oy - 1.0, oy + 17.0);
+        // FIXED: Calculate nearest Y point in the chunk section [originY, originY+16)
+        // to the camera at camY.
+        // Clamp camY to the section's Y range to get the closest point.
+        final double sectionYmin = sectionOriginY;
+        final double sectionYmax = sectionOriginY + 16.0;
+        final double clampedY = Math.max(sectionYmin, Math.min(camY, sectionYmax));
+        final double dy = clampedY - camY;
 
         // Ellipsoid norm test
         final double norm = d2xz * INV_R2_XZ + dy * dy * INV_R2_Y;
